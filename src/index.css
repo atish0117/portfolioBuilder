@@ -1,0 +1,129 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
+
+ /* for logo */
+@import url('https://fonts.googleapis.com/css2?family=Ballet:opsz@16..72&family=Fira+Code:wght@300..700&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --toast-bg: #ffffff;
+  --toast-color: #1f2937;
+}
+
+.dark {
+  --toast-bg: #1f2937;
+  --toast-color: #f9fafb;
+}
+
+/* for logo */
+
+.source-code-pro-logo {
+  font-family: "Ballet", monospace;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.google-sans-code-atish {
+  font-family: "Fira Code", monospace;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.google-sans-code-atish2 {
+  font-family: "Google Sans Code", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+@layer base {
+  body {
+    @apply bg-white dark:bg-dark-900 text-gray-900 dark:text-gray-100 transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .btn-primary {
+
+    @apply gradient-bg hover:ulta-themeColor text-white  px-6 py-3 rounded-lg font-medium transform hover:scale-105 active:scale-95;
+  }
+
+
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 dark:bg-dark-700 dark:hover:bg-dark-600 text-gray-900 dark:text-gray-100 px-6 py-3 rounded-lg font-medium transition-all duration-200;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+  }
+  
+  .card {
+    @apply bg-white dark:bg-dark-800 rounded-xl shadow-lg border border-gray-200 dark:border-dark-700 transition-all duration-300;
+  }
+  
+  .gradient-bg {
+
+    @apply bg-black/70 transition-all duration-1000 ease-in-out;
+  }
+  .gradient-bg4 {
+    @apply bg-gradient-to-br from-primary-600  to-primary-400 transition-all duration-1000 ease-in-out;
+  }
+  .gradient-bg2 {
+    @apply bg-gradient-to-br from-primary-600/90  to-primary-400/90 transition-all duration-1000 ease-in-out;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-primary-400;
+  }
+
+
+
+  .ulta-themeColor {
+    @apply bg-gradient-to-br from-primary-400/90 to-primary-600/90 transition-all duration-1000 ease-in-out;
+  }
+
+
+
+  .skeleton {
+    @apply animate-pulse bg-gray-200 dark:bg-dark-700 rounded;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-dark-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 dark:bg-dark-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500 dark:bg-dark-500;
+}
