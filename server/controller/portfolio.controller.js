@@ -1,12 +1,8 @@
-import express from 'express'
 import User from '../models/User.js'
 import Project from '../models/Project.js'
-import { auth } from '../middleware/auth.js'
 
-const router = express.Router()
-
-// Get public portfolio by username
-router.get('/:username', async (req, res) => {
+// GET public portfolio
+export const getPublicPortfolio = async (req, res) => {
   try {
     const { username } = req.params
 
@@ -25,11 +21,9 @@ router.get('/:username', async (req, res) => {
         profileImgUrl: user.profileImgUrl,
         resumeUrl: user.resumeUrl,
         title: user.title,
-
         phoneNumber: user.phoneNumber,
         location: user.location,
         tagLine: user.tagLine,
-
         socialLinks: user.socialLinks,
         intro: user.intro,
         aboutSections: user.aboutSections,
@@ -56,10 +50,10 @@ router.get('/:username', async (req, res) => {
     console.error('Get portfolio error:', error)
     res.status(500).json({ message: 'Server error' })
   }
-})
+}
 
-// Update section order
-router.put('/section-order', auth, async (req, res) => {
+// UPDATE section order
+export const updateSectionOrder = async (req, res) => {
   try {
     const { sectionOrder } = req.body
 
@@ -78,102 +72,75 @@ router.put('/section-order', auth, async (req, res) => {
       sectionOrder: user.sectionOrder
     })
   } catch (error) {
-    console.error('Update section order error:', error)
+    console.error(error)
     res.status(500).json({ message: 'Server error' })
   }
-})
+}
 
-// Toggle section visibility
-router.put('/section-visibility', auth, async (req, res) => {
+// TOGGLE section visibility
+export const toggleSectionVisibility = async (req, res) => {
   try {
     const { section, visible } = req.body
 
-    console.log('Toggling section visibility:', { section, visible })
     if (!section || typeof visible !== 'boolean') {
-      return res.status(400).json({ message: 'Section and visible status are required' })
+      return res.status(400).json({ message: 'Invalid payload' })
     }
 
     const user = await User.findById(req.user._id)
-    
+
     if (!user.visibleSections) {
       user.visibleSections = new Map()
     }
-    
+
     user.visibleSections.set(section, visible)
     await user.save()
 
-    console.log('Updated visible sections:', Object.fromEntries(user.visibleSections))
     res.json({
-      message: 'Section visibility updated successfully',
+      message: 'Section visibility updated',
       visibleSections: Object.fromEntries(user.visibleSections)
     })
   } catch (error) {
-    console.error('Toggle section visibility error:', error)
+    console.error(error)
     res.status(500).json({ message: 'Server error' })
   }
-})
+}
 
-// Update user profile with additional fields
-router.put('/profile', auth, async (req, res) => {
+// UPDATE profile
+export const updateProfile = async (req, res) => {
   try {
-    const {
-      fullName,
-      title,
-
-      tagLine,
-
-      email,
-      phoneNumber,
-      location,
-      intro,
-      aboutSections,
-      availability,
-      hourlyRate,
-      preferredWorkType,
-      languages,
-      timezone,
-      skills,
-      workExperience,
-      socialLinks,
-      profileImgUrl,
-      resumeUrl,
-      experienceDetails,
-      education,
-      testimonials,
-      certifications,
-      selectedTemplate
-    } = req.body
+    const allowedFields = [
+      'fullName',
+      'title',
+      'tagLine',
+      'email',
+      'phoneNumber',
+      'location',
+      'intro',
+      'aboutSections',
+      'availability',
+      'hourlyRate',
+      'preferredWorkType',
+      'languages',
+      'timezone',
+      'skills',
+      'workExperience',
+      'socialLinks',
+      'profileImgUrl',
+      'resumeUrl',
+      'experienceDetails',
+      'education',
+      'testimonials',
+      'certifications',
+      'selectedTemplate'
+    ]
 
     const updateData = {}
-    
-    if (fullName) updateData.fullName = fullName
-    if (title !== undefined) updateData.title = title
-    if (tagLine !== undefined) updateData.tagLine = tagLine
 
-    if (skills) updateData.skills = skills
-    if (workExperience) updateData.workExperience = workExperience
-
-    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber
-    if (location !== undefined) updateData.location = location
-    if (email !== undefined) updateData.email = email
-    if (intro !== undefined) updateData.intro = intro
-    if (aboutSections) updateData.aboutSections = aboutSections
-    if (availability) updateData.availability = availability
-    if (hourlyRate) updateData.hourlyRate = hourlyRate
-    if (preferredWorkType) updateData.preferredWorkType = preferredWorkType
-    if (languages) updateData.languages = languages
-    if (timezone) updateData.timezone = timezone
-    if (skills !== undefined) updateData.skills = skills
-    if (workExperience !== undefined) updateData.workExperience = workExperience
-    if (socialLinks !== undefined) updateData.socialLinks = socialLinks
-    if (profileImgUrl !== undefined) updateData.profileImgUrl = profileImgUrl
-    if (resumeUrl !== undefined) updateData.resumeUrl = resumeUrl
-    if (experienceDetails !== undefined) updateData.experienceDetails = experienceDetails
-    if (education !== undefined) updateData.education = education
-    if (testimonials !== undefined) updateData.testimonials = testimonials
-    if (certifications !== undefined) updateData.certifications = certifications
-    if (selectedTemplate !== undefined) updateData.selectedTemplate = selectedTemplate
-
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field]
+      }
+    })
 
     const user = await User.findByIdAndUpdate(
       req.user._id,
@@ -192,7 +159,6 @@ router.put('/profile', auth, async (req, res) => {
         resumeUrl: user.resumeUrl,
         title: user.title,
         tagLine: user.tagLine,
-
         socialLinks: user.socialLinks,
         skills: user.skills,
         workExperience: user.workExperience,
@@ -203,7 +169,7 @@ router.put('/profile', auth, async (req, res) => {
         sectionOrder: user.sectionOrder,
         visibleSections: user.visibleSections,
         selectedTemplate: user.selectedTemplate,
-        role: user.role,            
+        role: user.role,
         status: user.status
       }
     })
@@ -211,6 +177,4 @@ router.put('/profile', auth, async (req, res) => {
     console.error('Update profile error:', error)
     res.status(500).json({ message: 'Server error during profile update' })
   }
-})
-
-export default router
+}
