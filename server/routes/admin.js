@@ -596,6 +596,7 @@ import {
   updateTemplate,
   deleteTemplate,
   getAnalytics,
+  getAnalyticsLogs,
   getSettings,
   updateSetting,
   bulkUserAction,
@@ -615,14 +616,12 @@ router.get(
   "/users",
   adminAuth,
   [
-    query("page").optional().isInt({ min: 1 }),
-    query("limit").optional().isInt({ min: 1, max: 100 }),
-    query("search").optional().isLength({ max: 100 }),
-    query("status")
-      .optional()
-      .isIn(["active", "banned", "suspended", "pending"]),
-    query("role").optional().isIn(["user", "admin", "moderator"]),
-  ],
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+  query('search').optional().isLength({ max: 100 }).withMessage('Search term too long'),
+  query('status').optional().isIn(['active', 'banned', 'suspended', 'pending']).withMessage('Invalid status'),
+  query('role').optional().isIn(['user', 'admin', 'moderator']).withMessage('Invalid role')
+],
   validateRequest,
   getUsers
 );
@@ -631,8 +630,8 @@ router.put(
   "/users/:userId/status",
   adminAuth,
   [
-    body("status").isIn(["active", "banned", "suspended", "pending"]),
-    body("reason").optional().isLength({ max: 500 }),
+    body("status").isIn(["active", "banned", "suspended", "pending"]).withMessage('Invalid status').withMessage('Invalid status'),
+    body("reason").optional().isLength({ max: 500 }).withMessage('Reason too long').withMessage('Reason too long'),
   ],
   validateRequest,
   updateUserStatus
@@ -641,7 +640,7 @@ router.put(
 router.put(
   "/users/:userId/role",
   adminAuth,
-  [body("role").isIn(["user", "admin", "moderator"])],
+  [body("role").isIn(["user", "admin", "moderator"])].withMessage('Invalid role'),
   validateRequest,
   updateUserRole
 );
@@ -656,19 +655,12 @@ router.post(
   "/templates",
   adminAuth,
   [
-    body("id").notEmpty(),
-    body("name").notEmpty(),
-    body("description").notEmpty(),
-    body("category").isIn([
-      "minimal",
-      "modern",
-      "creative",
-      "professional",
-      "developer",
-      "designer",
-    ]),
-    body("previewImage").isURL(),
-  ],
+    body('id').notEmpty().withMessage('Template ID is required'),
+  body('name').notEmpty().withMessage('Template name is required'),
+  body('description').notEmpty().withMessage('Template description is required'),
+  body('category').isIn(['minimal', 'modern', 'creative', 'professional', 'developer', 'designer']).withMessage('Invalid category'),
+  body('previewImage').isURL().withMessage('Preview image must be a valid URL')
+],
   validateRequest,
   createTemplate
 );
@@ -687,6 +679,13 @@ router.get(
   getAnalytics
 );
 
+router.get(
+  "/analytics/logs",
+  adminAuth,
+  getAnalyticsLogs
+);
+
+
 /*SYSTEM SETTINGS*/
 
 router.get("/settings", adminAuth, getSettings);
@@ -695,8 +694,8 @@ router.put(
   "/settings/:settingKey",
   adminAuth,
   [
-    body("settingValue").notEmpty(),
-    body("description").optional().isLength({ max: 500 }),
+    body("settingValue").notEmpty().withMessage('Setting value is required'),
+    body("description").optional().isLength({ max: 500 }).withMessage('Description too long'),
   ],
   validateRequest,
   updateSetting
@@ -708,9 +707,9 @@ router.post(
   "/users/bulk-action",
   adminAuth,
   [
-    body("userIds").isArray({ min: 1 }),
-    body("action").isIn(["ban", "unban", "delete", "activate"]),
-    body("reason").optional().isLength({ max: 500 }),
+    body("userIds").isArray({ min: 1 }).withMessage('User IDs must be an array'),
+    body("action").isIn(["ban", "unban", "delete", "activate"]).withMessage('Invalid action'),
+    body("reason").optional().isLength({ max: 500 }).withMessage('Reason too long'),
   ],
   validateRequest,
   bulkUserAction
