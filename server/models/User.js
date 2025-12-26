@@ -239,6 +239,25 @@ userSchema.pre("validate", async function (next) {
   next();
 });
 
+const sanitize = (_, ret) => {
+  delete ret.password
+  delete ret.__v
+  delete ret.passwordResetToken
+  delete ret.passwordResetExpires
+
+  if (ret.socialAuth) {
+    delete ret.socialAuth.github?.accessToken
+    delete ret.socialAuth.google?.accessToken
+    delete ret.socialAuth.linkedin?.accessToken
+  }
+
+  return ret
+}
+
+userSchema.set('toJSON', { transform: sanitize })
+userSchema.set('toObject', { transform: sanitize })
+
+
 export default mongoose.model("User", userSchema);
 
 
