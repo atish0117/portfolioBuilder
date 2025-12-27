@@ -7,7 +7,7 @@ import dotenv from 'dotenv'
 
 // Import routes
 import authRoutes from './routes/auth.js'
-import passwordRoutes from './routes/password.js'
+import passwordRoutes from './routes/password.routes.js'
 import socialAuthRoutes from './routes/socialAuth.js'
 import integrationsRoutes from './routes/integrationRoutes.js'
 import portfolioRoutes from './routes/portfolio.routes.js'
