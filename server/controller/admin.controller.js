@@ -372,7 +372,7 @@ export const deleteTemplate = async (req, res) => {
 /* =========================
   ADMIN DASHBOARD ANALYTICS
 ========================= */
-export const getDashboardAnalytics = async (req, res) => {
+export const getAnalytics = async (req, res) => {
   try {
     const range = req.query.range || "30d";
     const now = new Date();
