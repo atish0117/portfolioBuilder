@@ -600,7 +600,7 @@ import {
   getSettings,
   updateSetting,
   bulkUserAction,
-} from "../controllers/admin.controller.js";
+} from "../controller/admin.controller.js";
 import { adminAuth, moderatorAuth } from "../middleware/adminAuth.js";
 import { validateRequest } from "../middleware/validateRequest.js";
 
@@ -619,8 +619,8 @@ router.get(
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
   query('search').optional().isLength({ max: 100 }).withMessage('Search term too long'),
-  query('status').optional().isIn(['active', 'banned', 'suspended', 'pending']).withMessage('Invalid status'),
-  query('role').optional().isIn(['user', 'admin', 'moderator']).withMessage('Invalid role')
+  query('status').optional({ checkFalsy: true }).isIn(['active', 'banned', 'suspended', 'pending']).withMessage('Invalid status'),
+  query('role').optional({ checkFalsy: true }).isIn(['user', 'admin', 'moderator']).withMessage('Invalid role')
 ],
   validateRequest,
   getUsers
@@ -640,7 +640,7 @@ router.put(
 router.put(
   "/users/:userId/role",
   adminAuth,
-  [body("role").isIn(["user", "admin", "moderator"])].withMessage('Invalid role'),
+  [body("role").isIn(["user", "admin", "moderator"]).withMessage('Invalid role'),],
   validateRequest,
   updateUserRole
 );
