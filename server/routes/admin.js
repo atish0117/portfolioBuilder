@@ -606,12 +606,10 @@ import { validateRequest } from "../middleware/validateRequest.js";
 
 const router = express.Router();
 
-/* ===================== DASHBOARD ===================== */
-
+//  DASHBOARD 
 router.get("/dashboard", adminAuth, getDashboard);
 
-/* ===================== USERS ===================== */
-
+//  USERS
 router.get(
   "/users",
   adminAuth,
@@ -647,7 +645,7 @@ router.put(
 
 router.delete("/users/:userId", adminAuth, deleteUser);
 
-/* ===================== TEMPLATES ===================== */
+//  TEMPLATES
 
 router.get("/templates", moderatorAuth, getTemplates);
 
@@ -669,7 +667,7 @@ router.put("/templates/:templateId", adminAuth, updateTemplate);
 
 router.delete("/templates/:templateId", adminAuth, deleteTemplate);
 
-/*  ANALYTICS */
+//  ANALYTICS
 
 router.get(
   "/analytics",
@@ -686,7 +684,7 @@ router.get(
 );
 
 
-/*SYSTEM SETTINGS*/
+//  SYSTEM SETTINGS
 
 router.get("/settings", adminAuth, getSettings);
 
@@ -701,7 +699,7 @@ router.put(
   updateSetting
 );
 
-// BULK ACTIONS
+//  BULK ACTIONS
 
 router.post(
   "/users/bulk-action",

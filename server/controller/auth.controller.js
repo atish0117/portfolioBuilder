@@ -131,7 +131,7 @@ export const updateProfile = async (req, res) => {
   }
 }
 
-// ================= REFRESH TOKEN =================
+//  REFRESH TOKEN 
 export const refreshToken = async (req, res) => {
   try {
     const { refreshToken } = req.body
