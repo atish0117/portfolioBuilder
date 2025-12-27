@@ -398,7 +398,7 @@ import {
   getProfile,
   updateProfile,
   refreshToken
-} from '../controllers/auth.controller.js'
+} from "../controller/auth.controller.js"
 import { auth } from '../middleware/auth.js'
 import { validateRequest } from "../middleware/validateRequest.js";
 
