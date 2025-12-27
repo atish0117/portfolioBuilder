@@ -5,9 +5,8 @@ import Template from "../models/Template.js";
 import Analytics from "../models/Analytics.js";
 import SystemSettings from "../models/SystemSettings.js";
 
-/* =========================
-    DASHBOARD
-========================= */
+
+//  DASHBOARD
 export const getDashboard = async (req, res) => {
   try {
     console.log(
@@ -85,9 +84,8 @@ export const getDashboard = async (req, res) => {
   }
 };
 
-/* =========================
-   USERS LIST
-========================= */
+
+//  USERS LIST
 export const getUsers = async (req, res) => {
   try {
     // another one option
@@ -171,9 +169,8 @@ export const getUsers = async (req, res) => {
   }
 };
 
-/* =========================
-  UPDATE USER STATUS
-========================= */
+
+//  UPDATE USER STATUS
 export const updateUserStatus = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -233,9 +230,8 @@ export const updateUserStatus = async (req, res) => {
   }
 };
 
-/* =========================
-   UPDATE USER ROLE
-========================= */
+
+//  UPDATE USER ROLE
 export const updateUserRole = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -261,9 +257,8 @@ export const updateUserRole = async (req, res) => {
   }
 };
 
-/* =========================
-   DELETE USER
-========================= */
+
+//  DELETE USER
 export const deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -293,9 +288,8 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-/* =========================
-   TEMPLATES
-========================= */
+
+//  TEMPLATES
 export const getTemplates = async (req, res) => {
   try {
     const templates = await Template.find()
@@ -369,9 +363,8 @@ export const deleteTemplate = async (req, res) => {
   }
 };
 
-/* =========================
-  ADMIN DASHBOARD ANALYTICS
-========================= */
+
+//  ADMIN DASHBOARD ANALYTICS
 export const getAnalytics = async (req, res) => {
   try {
     const range = req.query.range || "30d";
@@ -436,9 +429,8 @@ export const getAnalytics = async (req, res) => {
   }
 };
 
-/* =========================
-  RAW ANALYTICS LOGS
-========================= */
+
+//  RAW ANALYTICS LOGS
 export const getAnalyticsLogs = async (req, res) => {
   try {
     const analytics = await Analytics.find().sort({ createdAt: -1 }).limit(100);
@@ -497,9 +489,8 @@ export const updateSetting = async (req, res) => {
   }
 };
 
-/* =========================
-  BULK USER ACTIONS
-========================= */
+
+//  BULK USER ACTIONS
 export const bulkUserAction = async (req, res) => {
   try {
     const { userIds, action, reason } = req.body;
