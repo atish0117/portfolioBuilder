@@ -5,7 +5,7 @@ import {
   updateSectionOrder,
   toggleSectionVisibility,
   updateProfile
-} from '../controllers/portfolio.controller.js'
+} from '../controller/portfolio.controller.js'
 
 const router = express.Router()
 
