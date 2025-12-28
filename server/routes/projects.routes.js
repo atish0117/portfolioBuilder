@@ -129,7 +129,7 @@ import {
   createProject,
   updateProject,
   deleteProject
-} from '../controllers/project.controller.js'
+} from '../controller/project.controller.js'
 
 const router = express.Router()
 
