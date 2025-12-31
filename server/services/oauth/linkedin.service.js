@@ -1,6 +1,5 @@
 import axios from 'axios'
-import dotenv from 'dotenv'
-dotenv.config()
+
 
 const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID
 const LINKEDIN_CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET
@@ -76,7 +75,6 @@ export const getLinkedInUser = async (accessToken) => {
       profileImgUrl: profilePicture,
       username: profile.id,
       profileUrl: `https://linkedin.com/in/${profile.id}`,
-      accessToken
     }
   } catch (error) {
     console.error('LinkedIn user fetch error:', error)

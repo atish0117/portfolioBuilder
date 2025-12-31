@@ -1,6 +1,4 @@
 import axios from 'axios'
-import dotenv from 'dotenv'
-dotenv.config()
 
 
 
@@ -73,13 +71,12 @@ export const getGitHubUser = async (accessToken) => {
       email: primaryEmail,
       fullName: user.name || user.login,
       profileImgUrl: user.avatar_url,
-      bio: user.bio,
+      tagLine: user.tagLine,
       location: user.location,
       profileUrl: user.html_url,
       publicRepos: user.public_repos,
       followers: user.followers,
       following: user.following,
-      accessToken
     }
   } catch (error) {
     console.error('GitHub user fetch error:', error)

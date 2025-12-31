@@ -11,20 +11,20 @@ const userSchema = new mongoose.Schema(
       github: {
         id: String,
         username: String,
-        accessToken: String, // consider encrypting
+        // accessToken: String, // consider encrypting
         profileUrl: String,
         lastSync: Date
       },
       google: {
         id: String,
         email: String,
-        accessToken: String, // consider encrypting
+        // accessToken: String, // consider encrypting
         lastSync: Date
       },
       linkedin: {
         id: String,
         username: String,
-        accessToken: String, //consider encrypting
+        // accessToken: String, //consider encrypting
         profileUrl: String,
         lastSync: Date
       }
@@ -35,6 +35,32 @@ const userSchema = new mongoose.Schema(
       enum: ["local", "github", "google", "linkedin"],
       default: "local"
     },
+
+    // OAuth Connections 
+connections: {
+  github: {
+    connected: { type: Boolean, default: false },
+    connectedAt: { type: Date },
+    lastSyncedAt: { type: Date },
+    username: { type: String },
+    profileUrl: { type: String }
+  },
+  google: {
+    connected: { type: Boolean, default: false },
+    connectedAt: { type: Date },
+    lastSyncedAt: { type: Date },
+    email: { type: String },
+    profileUrl: { type: String }
+  },
+  linkedin: {
+    connected: { type: Boolean, default: false },
+    connectedAt: { type: Date },
+    lastSyncedAt: { type: Date },
+    username: { type: String },
+    profileUrl: { type: String }
+  }
+},
+
 
     // Password Reset Fields
     passwordResetToken: String,
