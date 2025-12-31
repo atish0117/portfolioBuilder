@@ -1,6 +1,5 @@
 import axios from 'axios'
-import dotenv from 'dotenv'
-dotenv.config()
+
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
 const GOOGLE_REDIRECT_URI = 'http://localhost:5000/api/auth/callback'
@@ -23,7 +22,7 @@ export const getGoogleAuthUrl = (state = '') => {
 
 export const exchangeCodeForToken = async (code) => {
   try {
-    const response = await axios.post('https://oauth2.googleapis.com/token', {
+    const  { data }  = await axios.post('https://oauth2.googleapis.com/token', {
       client_id: GOOGLE_CLIENT_ID,
       client_secret: GOOGLE_CLIENT_SECRET,
       code: code,
@@ -33,21 +32,20 @@ export const exchangeCodeForToken = async (code) => {
       headers: {
         'Content-Type': 'application/json'
       }
-    })
+    }
+  )
 
-    if (response.data.error) {
-      throw new Error(response.data.error_description || 'Google OAuth error')
+
+    if (!data.access_token) {
+      throw new Error(data.error_description || 'Google OAuth failed')
     }
 
     return {
-      accessToken: response.data.access_token,
-      refreshToken: response.data.refresh_token,
-      expiresIn: response.data.expires_in,
-      idToken: response.data.id_token
+      accessToken: data.access_token,
     }
   } catch (error) {
     console.error('Google token exchange error:', error)
-    throw new Error('Failed to exchange code for token')
+    throw new Error('Failed to exchange Google code for token')
   }
 }
 
@@ -69,7 +67,7 @@ export const getGoogleUser = async (accessToken) => {
       lastName: user.family_name,
       profileImgUrl: user.picture,
       verified: user.verified_email,
-      accessToken
+      
     }
   } catch (error) {
     console.error('Google user fetch error:', error)
