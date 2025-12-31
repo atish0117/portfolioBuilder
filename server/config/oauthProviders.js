@@ -7,7 +7,7 @@ export const providers = {
     scope: 'read:user user:email',
     clientId: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    redirectUri: process.env.GITHUB_REDIRECT_URI // e.g. https://your.api.com/oauth/github/callback
+    redirectUri: process.env.REDIRECT_URI // e.g. https://your.api.com/oauth/github/callback
   },
   google: {
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -16,7 +16,7 @@ export const providers = {
     scope: 'openid email profile',
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    redirectUri: process.env.GOOGLE_REDIRECT_URI
+    redirectUri: process.env.REDIRECT_URI
   },
   linkedin: {
     authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
@@ -26,6 +26,6 @@ export const providers = {
     scope: 'r_liteprofile r_emailaddress',
     clientId: process.env.LINKEDIN_CLIENT_ID,
     clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-    redirectUri: process.env.LINKEDIN_REDIRECT_URI
+    redirectUri: process.env.REDIRECT_URI
   }
 };
