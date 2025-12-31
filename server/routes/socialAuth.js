@@ -2,12 +2,11 @@ import express from 'express'
 import User from '../models/User.js'
 import { generateTokens } from '../utils/jwt.js'
 import { auth } from '../middleware/auth.js'
-    import {getGitHubUser} from '../services/oauth/githubOAuth.js'
-import { exchangeCodeForToken } from '../services/oauth/githubOAuth.js'
-import {getGitHubAuthUrl} from '../services/oauth/githubOAuth.js'
+    import {getGitHubUser} from '../services/oauth/github.service.js'
+import { exchangeCodeForToken } from '../services/oauth/github.service.js'
+import {getGitHubAuthUrl} from '../services/oauth/github.service.js'
 import axios from 'axios'
-import dotenv from 'dotenv'
-dotenv.config()
+
 const router = express.Router()
 
 // GitHub OAuth Configuration
@@ -268,44 +267,6 @@ const exchangeLinkedInCode = async (code) => {
   }
 }
 
-// LinkedIn User Data
-// const getLinkedInUser = async (accessToken) => {
-//   try {
-//     const [profileResponse, emailResponse] = await Promise.all([
-//       fetch('https://api.linkedin.com/v2/people/~:(id,firstName,lastName,profilePicture(displayImage~:playableStreams))', {
-//         headers: {
-//           'Authorization': `Bearer ${accessToken}`
-//         }
-//       }),
-//       fetch('https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', {
-//         headers: {
-//           'Authorization': `Bearer ${accessToken}`
-//         }
-//       })
-//     ])
-
-//     const profile = await profileResponse.json()
-//     const emailData = await emailResponse.json()
-
-//     const email = emailData.elements?.[0]?.['handle~']?.emailAddress
-//     const profilePicture = profile.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier
-
-//     return {
-//       id: profile.id,
-//       email: email,
-//       fullName: `${profile.firstName.localized.en_US} ${profile.lastName.localized.en_US}`,
-//       firstName: profile.firstName.localized.en_US,
-//       lastName: profile.lastName.localized.en_US,
-//       profileImgUrl: profilePicture,
-//       username: profile.id,
-//       profileUrl: `https://linkedin.com/in/${profile.id}`
-//     }
-//   } catch (error) {
-//     console.error('LinkedIn user fetch error:', error)
-//     throw new Error('Failed to fetch LinkedIn user data')
-//   }
-// }
-
 
 // LinkedIn User Data (Updated for OpenID Connect)
 const getLinkedInUser = async (accessToken) => {
@@ -339,7 +300,6 @@ const getLinkedInUser = async (accessToken) => {
     throw new Error('Failed to fetch LinkedIn user data');
   }
 }
-
 
 
 // Universal OAuth Callback Handler
