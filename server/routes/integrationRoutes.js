@@ -110,252 +110,274 @@
 // export default router;
 
 
+// --------version-2-------
+
+// import express from 'express'
+// import { auth } from '../middleware/auth.js'
+// import User from '../models/User.js'
+// import Project from '../models/Project.js'
+// import { getGitHubRepositories, getGitHubStats } from '../services/oauth/github.service.js'
+// import { getLinkedInProfile, getLinkedInExperience } from '../services/oauth/linkedin.service.js'
+// import { getGoogleProfile } from '../services/oauth/google.service.js'
+
+// const router = express.Router()
+
+// // Get integration status
+// router.get('/status', auth, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id).select('socialAuth socialLinks integrationSettings')
+    
+//     const integrations = {
+//       github: {
+//         connected: !!(user.socialAuth?.github?.accessToken),
+//         lastSync: user.socialAuth?.github?.lastSync,
+//         username: user.socialAuth?.github?.username,
+//         profileUrl: user.socialLinks?.github
+//       },
+//       google: {
+//         connected: !!(user.socialAuth?.google?.accessToken),
+//         lastSync: user.socialAuth?.google?.lastSync,
+//         email: user.socialAuth?.google?.email
+//       },
+//       linkedin: {
+//         connected: !!(user.socialAuth?.linkedin?.accessToken),
+//         lastSync: user.socialAuth?.linkedin?.lastSync,
+//         username: user.socialAuth?.linkedin?.username,
+//         profileUrl: user.socialLinks?.linkedin
+//       },
+//       instagram: {
+//         connected: !!(user.socialLinks?.instagram),
+//         profileUrl: user.socialLinks?.instagram
+//       },
+//       dribbble: {
+//         connected: !!(user.socialLinks?.dribbble),
+//         profileUrl: user.socialLinks?.dribbble
+//       },
+//       behance: {
+//         connected: !!(user.socialLinks?.behance),
+//         profileUrl: user.socialLinks?.behance
+//       },
+//       website: {
+//         connected: !!(user.socialLinks?.website),
+//         profileUrl: user.socialLinks?.website
+//       }
+//     }
+
+//     const connectedCount = Object.values(integrations).filter(i => i.connected).length
+
+//     res.json({
+//       integrations,
+//       connectedCount,
+//       totalIntegrations: Object.keys(integrations).length,
+//       integrationSettings: user.integrationSettings || {}
+//     })
+//   } catch (error) {
+//     console.error('Get integration status error:', error)
+//     res.status(500).json({ message: 'Server error' })
+//   }
+// })
+
+// // GitHub Integration
+// router.get('/github/repos', auth, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id)
+    
+//     if (!user.socialAuth?.github?.accessToken) {
+//       return res.status(400).json({ message: 'GitHub account not connected' })
+//     }
+
+//     const repositories = await getGitHubRepositories(user.socialAuth.github.accessToken, {
+//       limit: 20,
+//       includePrivate: user.integrationSettings?.github?.importPrivateRepos
+//     })
+
+//     res.json({
+//       repositories: repositories.filter(repo => {
+//         if (user.integrationSettings?.github?.importPrivateRepos === false && repo.private) {
+//           return false
+//         }
+//         return !repo.fork && repo.stars >= 0
+//       })
+//     })
+//   } catch (error) {
+//     console.error('GitHub repos error:', error)
+//     res.status(500).json({ message: 'Failed to fetch GitHub repositories' })
+//   }
+// })
+
+// router.post('/github/import', auth, async (req, res) => {
+//   try {
+//     const { repoIds } = req.body
+//     const user = await User.findById(req.user._id)
+
+//     if (!user.socialAuth?.github?.accessToken) {
+//       return res.status(400).json({ message: 'GitHub account not connected' })
+//     }
+
+//     const repositories = await getGitHubRepositories(user.socialAuth.github.accessToken)
+//     const importedProjects = []
+//     const errors = []
+
+//     for (const repoId of repoIds) {
+//       try {
+//         const repo = repositories.find(r => r.id === repoId)
+//         if (!repo) continue
+
+//         // Check if project already exists
+//         const existingProject = await Project.findOne({
+//           userId: user._id,
+//           githubLink: repo.url
+//         })
+
+//         if (!existingProject) {
+//           const project = new Project({
+//             userId: user._id,
+//             title: repo.name,
+//             description: repo.description || `${repo.language || 'Code'} project imported from GitHub`,
+//             techStack: [
+//               ...(repo.language ? [repo.language] : []),
+//               ...(repo.topics || []).slice(0, 4)
+//             ],
+//             githubLink: repo.url,
+//             liveLink: repo.homepage || '',
+//             category: 'web',
+//             status: 'published',
+//             startDate: new Date(repo.createdAt).toISOString().split('T')[0],
+//             endDate: repo.updatedAt !== repo.createdAt ? new Date(repo.updatedAt).toISOString().split('T')[0] : ''
+//           })
+
+//           await project.save()
+//           importedProjects.push(project)
+//         }
+//       } catch (error) {
+//         console.error(`Failed to import repo ${repoId}:`, error)
+//         errors.push(`Failed to import repository ${repoId}`)
+//       }
+//     }
+
+//     res.json({
+//       message: `Successfully imported ${importedProjects.length} projects from GitHub`,
+//       importedCount: importedProjects.length,
+//       totalRequested: repoIds.length,
+//       errors: errors.length > 0 ? errors : undefined
+//     })
+//   } catch (error) {
+//     console.error('GitHub import error:', error)
+//     res.status(500).json({ message: 'Failed to import GitHub repositories' })
+//   }
+// })
+
+// router.get('/github/stats', auth, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id)
+    
+//     if (!user.socialAuth?.github?.accessToken) {
+//       return res.status(400).json({ message: 'GitHub account not connected' })
+//     }
+
+//     const stats = await getGitHubStats(user.socialAuth.github.accessToken)
+//     res.json(stats)
+//   } catch (error) {
+//     console.error('GitHub stats error:', error)
+//     res.status(500).json({ message: 'Failed to fetch GitHub stats' })
+//   }
+// })
+
+// // LinkedIn Integration
+// router.get('/linkedin/profile', auth, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id)
+    
+//     if (!user.socialAuth?.linkedin?.accessToken) {
+//       return res.status(400).json({ message: 'LinkedIn account not connected' })
+//     }
+
+//     const profile = await getLinkedInProfile(user.socialAuth.linkedin.accessToken)
+//     res.json(profile)
+//   } catch (error) {
+//     console.error('LinkedIn profile error:', error)
+//     res.status(500).json({ message: 'Failed to fetch LinkedIn profile' })
+//   }
+// })
+
+// router.get('/linkedin/experience', auth, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id)
+    
+//     if (!user.socialAuth?.linkedin?.accessToken) {
+//       return res.status(400).json({ message: 'LinkedIn account not connected' })
+//     }
+
+//     const experience = await getLinkedInExperience(user.socialAuth.linkedin.accessToken)
+//     res.json(experience)
+//   } catch (error) {
+//     console.error('LinkedIn experience error:', error)
+//     res.status(500).json({ message: 'Failed to fetch LinkedIn experience' })
+//   }
+// })
+
+// // Google Integration
+// router.get('/google/profile', auth, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id)
+    
+//     if (!user.socialAuth?.google?.accessToken) {
+//       return res.status(400).json({ message: 'Google account not connected' })
+//     }
+
+//     const profile = await getGoogleProfile(user.socialAuth.google.accessToken)
+//     res.json(profile)
+//   } catch (error) {
+//     console.error('Google profile error:', error)
+//     res.status(500).json({ message: 'Failed to fetch Google profile' })
+//   }
+// })
+
+// // Update Integration Settings
+// router.put('/settings', auth, async (req, res) => {
+//   try {
+//     const { provider, settings } = req.body
+//     const user = await User.findById(req.user._id)
+
+//     if (!user.integrationSettings) {
+//       user.integrationSettings = {}
+//     }
+
+//     user.integrationSettings[provider] = {
+//       ...user.integrationSettings[provider],
+//       ...settings
+//     }
+
+//     await user.save()
+
+//     res.json({
+//       message: `${provider} integration settings updated`,
+//       settings: user.integrationSettings[provider]
+//     })
+//   } catch (error) {
+//     console.error('Update integration settings error:', error)
+//     res.status(500).json({ message: 'Failed to update settings' })
+//   }
+// })
+
+// export default router
+
+
+
+// --------version-3---------
+
 import express from 'express'
+import {
+  getIntegrationStatus,
+  disconnectProvider,
+  resyncProvider
+} from '../controllers/integration.controller.js'
 import { auth } from '../middleware/auth.js'
-import User from '../models/User.js'
-import Project from '../models/Project.js'
-import { getGitHubRepositories, getGitHubStats } from '../services/oauth/githubOAuth.js'
-import { getLinkedInProfile, getLinkedInExperience } from '../services/oauth/linkedinOAuth.js'
-import { getGoogleProfile } from '../services/oauth/googleOAuth.js'
 
 const router = express.Router()
 
-// Get integration status
-router.get('/status', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id).select('socialAuth socialLinks integrationSettings')
-    
-    const integrations = {
-      github: {
-        connected: !!(user.socialAuth?.github?.accessToken),
-        lastSync: user.socialAuth?.github?.lastSync,
-        username: user.socialAuth?.github?.username,
-        profileUrl: user.socialLinks?.github
-      },
-      google: {
-        connected: !!(user.socialAuth?.google?.accessToken),
-        lastSync: user.socialAuth?.google?.lastSync,
-        email: user.socialAuth?.google?.email
-      },
-      linkedin: {
-        connected: !!(user.socialAuth?.linkedin?.accessToken),
-        lastSync: user.socialAuth?.linkedin?.lastSync,
-        username: user.socialAuth?.linkedin?.username,
-        profileUrl: user.socialLinks?.linkedin
-      },
-      instagram: {
-        connected: !!(user.socialLinks?.instagram),
-        profileUrl: user.socialLinks?.instagram
-      },
-      dribbble: {
-        connected: !!(user.socialLinks?.dribbble),
-        profileUrl: user.socialLinks?.dribbble
-      },
-      behance: {
-        connected: !!(user.socialLinks?.behance),
-        profileUrl: user.socialLinks?.behance
-      },
-      website: {
-        connected: !!(user.socialLinks?.website),
-        profileUrl: user.socialLinks?.website
-      }
-    }
-
-    const connectedCount = Object.values(integrations).filter(i => i.connected).length
-
-    res.json({
-      integrations,
-      connectedCount,
-      totalIntegrations: Object.keys(integrations).length,
-      integrationSettings: user.integrationSettings || {}
-    })
-  } catch (error) {
-    console.error('Get integration status error:', error)
-    res.status(500).json({ message: 'Server error' })
-  }
-})
-
-// GitHub Integration
-router.get('/github/repos', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
-    
-    if (!user.socialAuth?.github?.accessToken) {
-      return res.status(400).json({ message: 'GitHub account not connected' })
-    }
-
-    const repositories = await getGitHubRepositories(user.socialAuth.github.accessToken, {
-      limit: 20,
-      includePrivate: user.integrationSettings?.github?.importPrivateRepos
-    })
-
-    res.json({
-      repositories: repositories.filter(repo => {
-        if (user.integrationSettings?.github?.importPrivateRepos === false && repo.private) {
-          return false
-        }
-        return !repo.fork && repo.stars >= 0
-      })
-    })
-  } catch (error) {
-    console.error('GitHub repos error:', error)
-    res.status(500).json({ message: 'Failed to fetch GitHub repositories' })
-  }
-})
-
-router.post('/github/import', auth, async (req, res) => {
-  try {
-    const { repoIds } = req.body
-    const user = await User.findById(req.user._id)
-
-    if (!user.socialAuth?.github?.accessToken) {
-      return res.status(400).json({ message: 'GitHub account not connected' })
-    }
-
-    const repositories = await getGitHubRepositories(user.socialAuth.github.accessToken)
-    const importedProjects = []
-    const errors = []
-
-    for (const repoId of repoIds) {
-      try {
-        const repo = repositories.find(r => r.id === repoId)
-        if (!repo) continue
-
-        // Check if project already exists
-        const existingProject = await Project.findOne({
-          userId: user._id,
-          githubLink: repo.url
-        })
-
-        if (!existingProject) {
-          const project = new Project({
-            userId: user._id,
-            title: repo.name,
-            description: repo.description || `${repo.language || 'Code'} project imported from GitHub`,
-            techStack: [
-              ...(repo.language ? [repo.language] : []),
-              ...(repo.topics || []).slice(0, 4)
-            ],
-            githubLink: repo.url,
-            liveLink: repo.homepage || '',
-            category: 'web',
-            status: 'published',
-            startDate: new Date(repo.createdAt).toISOString().split('T')[0],
-            endDate: repo.updatedAt !== repo.createdAt ? new Date(repo.updatedAt).toISOString().split('T')[0] : ''
-          })
-
-          await project.save()
-          importedProjects.push(project)
-        }
-      } catch (error) {
-        console.error(`Failed to import repo ${repoId}:`, error)
-        errors.push(`Failed to import repository ${repoId}`)
-      }
-    }
-
-    res.json({
-      message: `Successfully imported ${importedProjects.length} projects from GitHub`,
-      importedCount: importedProjects.length,
-      totalRequested: repoIds.length,
-      errors: errors.length > 0 ? errors : undefined
-    })
-  } catch (error) {
-    console.error('GitHub import error:', error)
-    res.status(500).json({ message: 'Failed to import GitHub repositories' })
-  }
-})
-
-router.get('/github/stats', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
-    
-    if (!user.socialAuth?.github?.accessToken) {
-      return res.status(400).json({ message: 'GitHub account not connected' })
-    }
-
-    const stats = await getGitHubStats(user.socialAuth.github.accessToken)
-    res.json(stats)
-  } catch (error) {
-    console.error('GitHub stats error:', error)
-    res.status(500).json({ message: 'Failed to fetch GitHub stats' })
-  }
-})
-
-// LinkedIn Integration
-router.get('/linkedin/profile', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
-    
-    if (!user.socialAuth?.linkedin?.accessToken) {
-      return res.status(400).json({ message: 'LinkedIn account not connected' })
-    }
-
-    const profile = await getLinkedInProfile(user.socialAuth.linkedin.accessToken)
-    res.json(profile)
-  } catch (error) {
-    console.error('LinkedIn profile error:', error)
-    res.status(500).json({ message: 'Failed to fetch LinkedIn profile' })
-  }
-})
-
-router.get('/linkedin/experience', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
-    
-    if (!user.socialAuth?.linkedin?.accessToken) {
-      return res.status(400).json({ message: 'LinkedIn account not connected' })
-    }
-
-    const experience = await getLinkedInExperience(user.socialAuth.linkedin.accessToken)
-    res.json(experience)
-  } catch (error) {
-    console.error('LinkedIn experience error:', error)
-    res.status(500).json({ message: 'Failed to fetch LinkedIn experience' })
-  }
-})
-
-// Google Integration
-router.get('/google/profile', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
-    
-    if (!user.socialAuth?.google?.accessToken) {
-      return res.status(400).json({ message: 'Google account not connected' })
-    }
-
-    const profile = await getGoogleProfile(user.socialAuth.google.accessToken)
-    res.json(profile)
-  } catch (error) {
-    console.error('Google profile error:', error)
-    res.status(500).json({ message: 'Failed to fetch Google profile' })
-  }
-})
-
-// Update Integration Settings
-router.put('/settings', auth, async (req, res) => {
-  try {
-    const { provider, settings } = req.body
-    const user = await User.findById(req.user._id)
-
-    if (!user.integrationSettings) {
-      user.integrationSettings = {}
-    }
-
-    user.integrationSettings[provider] = {
-      ...user.integrationSettings[provider],
-      ...settings
-    }
-
-    await user.save()
-
-    res.json({
-      message: `${provider} integration settings updated`,
-      settings: user.integrationSettings[provider]
-    })
-  } catch (error) {
-    console.error('Update integration settings error:', error)
-    res.status(500).json({ message: 'Failed to update settings' })
-  }
-})
+router.get('/status', auth, getIntegrationStatus)
+router.post('/resync/:provider', auth, resyncProvider)
+router.delete('/disconnect/:provider', auth, disconnectProvider)
 
 export default router
