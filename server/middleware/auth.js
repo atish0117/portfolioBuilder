@@ -26,89 +26,73 @@
 
 
 
+
 import { verifyAccessToken } from '../utils/jwt.js'
 import User from '../models/User.js'
 
 export const auth = async (req, res, next) => {
   try {
-    const authHeader = req.header('Authorization')
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        message: 'Access denied. No token provided.',
+    // 🔐 Read token from cookie
+    const token = req.cookies?.access_token
+
+    if (!token) {
+      return res.status(401).json({
+        message: 'Authentication required',
         code: 'NO_TOKEN'
       })
     }
 
-    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
-    
+    let decoded
     try {
-      const decoded = verifyAccessToken(token)
-      const user = await User.findById(decoded.userId).select('-password')
-      
-      if (!user) {
-        return res.status(401).json({ 
-          message: 'Token is valid but user not found.',
-          code: 'USER_NOT_FOUND'
-        })
-      }
-
-      req.user = user
-      req.tokenData = decoded
-      next()
-    } catch (tokenError) {
-      if (tokenError.message === 'TOKEN_EXPIRED') {
-        return res.status(401).json({ 
-          message: 'Token has expired.',
+      decoded = verifyAccessToken(token)
+    } catch (err) {
+      if (err.message === 'TOKEN_EXPIRED') {
+        return res.status(401).json({
+          message: 'Access token expired',
           code: 'TOKEN_EXPIRED'
         })
-      } else if (tokenError.message === 'INVALID_TOKEN') {
-        return res.status(401).json({ 
-          message: 'Invalid token.',
-          code: 'INVALID_TOKEN'
-        })
-      } else {
-        return res.status(401).json({ 
-          message: 'Token verification failed.',
-          code: 'TOKEN_VERIFICATION_FAILED'
-        })
       }
+      return res.status(401).json({
+        message: 'Invalid access token',
+        code: 'INVALID_TOKEN'
+      })
     }
+
+    const user = await User.findById(decoded.userId).select('-password')
+    if (!user) {
+      return res.status(401).json({
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      })
+    }
+
+    req.user = user
+    req.tokenData = decoded
+    next()
   } catch (error) {
     console.error('Auth middleware error:', error)
-    res.status(500).json({ 
-      message: 'Internal server error during authentication.',
+    return res.status(500).json({
+      message: 'Authentication failed',
       code: 'AUTH_SERVER_ERROR'
     })
   }
 }
 
+
 export const optionalAuth = async (req, res, next) => {
   try {
-    const authHeader = req.header('Authorization')
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next() // Continue without authentication
-    }
+    const token = req.cookies?.access_token
+    if (!token) return next()
 
-    const token = authHeader.substring(7)
-    
-    try {
-      const decoded = verifyAccessToken(token)
-      const user = await User.findById(decoded.userId).select('-password')
-      
-      if (user) {
-        req.user = user
-        req.tokenData = decoded
-      }
-    } catch (tokenError) {
-      // Ignore token errors for optional auth
-      console.log('Optional auth token error:', tokenError.message)
+    const decoded = verifyAccessToken(token)
+    const user = await User.findById(decoded.userId).select('-password')
+
+    if (user) {
+      req.user = user
+      req.tokenData = decoded
     }
-    
-    next()
-  } catch (error) {
-    console.error('Optional auth middleware error:', error)
-    next() // Continue even if there's an error
+  } catch {
+    // silently ignore
   }
+  next()
 }

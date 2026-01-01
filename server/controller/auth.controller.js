@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs'
 import { validationResult } from 'express-validator'
 import User from '../models/User.js'
 import { generateTokens, refreshAccessToken } from '../utils/jwt.js'
-
+import {clearAuthCookies} from '../utils/cookie.js'
 //  REGISTER USER
 export const registerUser = async (req, res) => {
   try {
@@ -30,13 +30,24 @@ export const registerUser = async (req, res) => {
       password: hashedPassword
     })
         // Generate JWT tokens
-    const tokens = generateTokens(user)
+    const { token, refreshToken } = generateTokens(user)
 
-    res.status(201).json({
-      message: 'User registered successfully',
-      ...tokens,
-      user
-    })
+    res
+      .cookie('accessToken', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      })
+      .cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      })
+      .status(201)
+      .json({
+        message: 'User registered successfully',
+        user
+      })
   } catch (error) {
     console.error('Register error:', error)
     res.status(500).json({ message: 'Server error during registration , Registration failed,' })
@@ -56,7 +67,7 @@ export const loginUser = async (req, res) => {
     // Check if user exists
     const user = await User.findOne({ email })
     if (!user) {
-      return res.status(400).json({ message: 'you have no any account' })
+      return res.status(400).json({ message: 'Invalid email or password' })
     }
 
     // Check if user has a password (not OAuth-only account)
@@ -73,13 +84,23 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' })
     }
 
-    const tokens = generateTokens(user)
+    const { token, refreshToken } = generateTokens(user)
 
-    res.json({
-      message: 'Login successful',
-      ...tokens,
-      user
-    })
+    res
+      .cookie('accessToken', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      })
+      .cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      })
+      .json({
+        message: 'Login successful',
+        user
+      })
   } catch (error) {
     console.error('Login error:', error)
     res.status(500).json({ message: 'Server error during login , Login failed' })
@@ -134,18 +155,33 @@ export const updateProfile = async (req, res) => {
 //  REFRESH TOKEN 
 export const refreshToken = async (req, res) => {
   try {
-    const { refreshToken } = req.body
+    const refreshToken = req.cookies?.refreshToken
     if (!refreshToken) {
-      return res.status(401).json({ message: 'Refresh token required' })
+      return res.status(401).json({ message: 'No refresh token' })
     }
 
     const tokens = await refreshAccessToken(refreshToken)
-    res.json({
-        message: 'Token refreshed',
-        ...tokens 
-    })
-  } catch (error) {
-    console.error('Token refresh error:', error)
+
+    res
+      .cookie('accessToken', tokens.token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      })
+      .cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict'
+      })
+      .json({ message: 'Token refreshed' })
+  } catch {
     res.status(401).json({ message: 'Invalid refresh token' })
   }
 }
+//  LOGOUT 
+export const logout = (req, res) => {
+  clearAuthCookies(res)
+  res.json({ message: 'Logged out successfully' })
+}
+
+

@@ -1,6 +1,7 @@
 import User from '../models/User.js'
-import { buildOAuthState, parseOAuthState } from '../utils/oauthState.js'
-
+import { buildOAuthState, parseOAuthState } from '../utils/oauthState.utils.js'
+import { generateTokens } from '../utils/jwt.js'
+import { setAuthCookies } from '../utils/cookie.js'
 // GitHub
 import {
   getGitHubAuthUrl,
@@ -89,14 +90,24 @@ export const oauthCallback = async (req, res) => {
           authProvider: provider
         })
       }
+
+      const tokens = generateTokens(user)
+      setAuthCookies(res, tokens)
     }
+
+
 
     /* ================= CONNECT / SYNC FLOW ================= */
     if (action !== 'login') {
       user = await User.findById(userId)
       if (!user) {
         return res.redirect(
+
+          // option
+
           `${process.env.CLIENT_URL}/login?error=user_not_found`
+          
+          // return res.redirect(`${process.env.CLIENT_URL}/login`)
         )
       }
     }
@@ -150,16 +161,8 @@ export const oauthCallback = async (req, res) => {
 
     await user.save()
 
-    /* ================= ISSUE COOKIE (LOGIN ONLY) ================= */
-    if (action === 'login') {
-      res.cookie('token', user.generateJWT(), {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict'
-      })
-    }
 
-    /* ================= REDIRECT ================= */
+    // REDIRECT
     res.redirect(`${process.env.CLIENT_URL}/dashboard`)
   } catch (err) {
     console.error('OAuth Callback Error:', err)
