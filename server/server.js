@@ -4,9 +4,10 @@ import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
+import cookieParser from 'cookie-parser'
 
 // Import routes
-import authRoutes from './routes/auth.js'
+import authRoutes from './routes/auth.routes.js'
 import passwordRoutes from './routes/password.routes.js'
 import socialAuthRoutes from './routes/socialAuth.js'
 import integrationsRoutes from './routes/integrationRoutes.js'
@@ -15,6 +16,7 @@ import projectRoutes from './routes/projects.routes.js'
 import seoRoutes from './routes/seo.js'
 import adminRoutes from './routes/admin.js'
 import { seedAllData } from './utils/seedData.js'
+import oathuRoutes from './routes/oauth.routes.js'
 import dbConnect from './db/dbConnect.js'
 dotenv.config()
 
@@ -28,6 +30,7 @@ app.use(cors({
   credentials: true
 }))
 
+app.use(cookieParser())
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -44,14 +47,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // Routes
 app.use('/api/auth', authRoutes)
-app.use('/api/auth', socialAuthRoutes)
-app.use('/api/password', passwordRoutes)
+// app.use('/api/auth', socialAuthRoutes)
+app.use('/api/oauth',oathuRoutes)
 app.use('/api/integrations', integrationsRoutes)
+app.use('/api/password', passwordRoutes)
 app.use('/api/portfolio', portfolioRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/seo', seoRoutes)
 app.use('/api/admin', adminRoutes)
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() })
