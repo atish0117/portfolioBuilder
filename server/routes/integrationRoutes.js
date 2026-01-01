@@ -371,7 +371,7 @@ import {
   getIntegrationStatus,
   disconnectProvider,
   resyncProvider
-} from '../controllers/integration.controller.js'
+} from '../controller/integration.controller.js'
 import { auth } from '../middleware/auth.js'
 
 const router = express.Router()
