@@ -4,48 +4,25 @@ const API_BASE_URL = '/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true 
 })
 
 // Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
-
-// Handle token refresh on 401 responses
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-
-      try {
-        const refreshToken = localStorage.getItem('refreshToken')
-        if (refreshToken) {
-          const response = await axios.post('/api/auth/refresh', { refreshToken })
-          const { token } = response.data
-          
-          localStorage.setItem('token', token)
-          originalRequest.headers.Authorization = `Bearer ${token}`
-          
-          return api(originalRequest)
-        }
-      } catch (refreshError) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('refreshToken')
-        window.location.href = '/login'
-      }
+  (res) => res,
+  (error) => {
+    if (
+      error.response?.status === 401 &&
+      !window.location.pathname.includes('/login')
+    ) {
+      // Optional: sirf protected pages pe redirect
+      console.warn('Session expired')
     }
-
     return Promise.reject(error)
   }
 )
+
+
 
 // Auth API
 export const authAPI = {
@@ -54,14 +31,13 @@ export const authAPI = {
 
   register: (userData) =>
     api.post('/auth/register', userData),
+  
+  logout: () => api.post('/auth/logout'),
 
   getProfile: () => api.get('/auth/profile'),
 
   updateProfile: (profileData) =>
     api.put('/auth/profile', profileData),
-
-    refreshToken: (refreshToken) =>
-    api.post('/auth/refresh', { refreshToken }),
   
   forgotPassword: (email) =>
     api.post('/password/forgot-password', { email }),
