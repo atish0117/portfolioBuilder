@@ -165,12 +165,12 @@ export const refreshToken = async (req, res) => {
     res
       .cookie('accessToken', tokens.token, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict'
       })
       .cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict'
       })
       .json({ message: 'Token refreshed' })
@@ -179,7 +179,7 @@ export const refreshToken = async (req, res) => {
   }
 }
 //  LOGOUT 
-export const logout = (req, res) => {
+export const logoutUser = (req, res) => {
   clearAuthCookies(res)
   res.json({ message: 'Logged out successfully' })
 }
