@@ -32,15 +32,32 @@ import User from '../models/User.js'
 
 export const auth = async (req, res, next) => {
   try {
-    // 🔐 Read token from cookie
-    const token = req.cookies?.access_token
+    // // 🔐 Read token from cookie
+    // const token = req.cookies?.access_token
 
-    if (!token) {
-      return res.status(401).json({
-        message: 'Authentication required',
-        code: 'NO_TOKEN'
-      })
+    // if (!token) {
+    //   return res.status(401).json({
+    //     message: 'Authentication required',
+    //     code: 'NO_TOKEN'
+    //   })
+    // }
+
+     let token
+
+    // ✅ 1️⃣ Cookie based
+    if (req.cookies?.accessToken) {
+      token = req.cookies.accessToken
     }
+    // ✅ 2️⃣ Header fallback (optional)
+    else if (req.headers.authorization?.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1]
+    }
+
+        if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
+
 
     let decoded
     try {
