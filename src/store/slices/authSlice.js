@@ -3,19 +3,30 @@ import { authAPI } from '../../services/api'
 
 const initialState = {
   user: null,
-  token: localStorage.getItem('token'),
   isAuthenticated: false,
   loading: false,
   error: null,
 }
 
-// Login
+// CHECK AUTH
+export const checkAuth = createAsyncThunk(
+  'auth/checkAuth',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.getProfile()
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Authentication failed')
+    }
+  }
+)
+
+// LOGIN
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await authAPI.login(credentials)
-      localStorage.setItem('token', response.data.token)
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Login failed')
@@ -23,13 +34,12 @@ export const login = createAsyncThunk(
   }
 )
 
-// Register
+// REGISTER
 export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
       const response = await authAPI.register(userData)
-      localStorage.setItem('token', response.data.token)
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Registration failed')
@@ -37,43 +47,6 @@ export const register = createAsyncThunk(
   }
 )
 
-// Check Auth
-export const checkAuth = createAsyncThunk(
-  'auth/checkAuth',
-  async (_, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem('token')
-      if (!token) throw new Error('No token found')
-
-      const response = await authAPI.getProfile()
-      return response.data
-    } catch (error) {
-
-       // Try to refresh token before giving up
-      const refreshToken = localStorage.getItem('refreshToken')
-      if (refreshToken) {
-        try {
-          const refreshResponse = await authAPI.refreshToken(refreshToken)
-          localStorage.setItem('token', refreshResponse.data.token)
-          if (refreshResponse.data.refreshToken) {
-            localStorage.setItem('refreshToken', refreshResponse.data.refreshToken)
-          }
-          
-          const profileResponse = await authAPI.getProfile()
-          return profileResponse.data
-        } catch (refreshError) {
-          localStorage.removeItem('token')
-          localStorage.removeItem('refreshToken')
-          return rejectWithValue('Session expired')
-        }
-      }
-      localStorage.removeItem('refreshToken')
-
-      localStorage.removeItem('token')
-      return rejectWithValue(error.response?.data?.message || 'Authentication failed')
-    }
-  }
-)
 
 // Update Profile
 export const updateProfile = createAsyncThunk(
@@ -93,12 +66,8 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      localStorage.removeItem('token')
-      
-      localStorage.removeItem('refreshToken')
-
+      authAPI.logout() // backend cookie clear
       state.user = null
-      state.token = null
       state.isAuthenticated = false
       state.error = null
     },
@@ -108,7 +77,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
+      // LOGIN
       .addCase(login.pending, (state) => {
         state.loading = true
         state.error = null
@@ -116,7 +85,6 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false
         state.user = action.payload.user
-        state.token = action.payload.token
         state.isAuthenticated = true
       })
       .addCase(login.rejected, (state, action) => {
@@ -124,7 +92,7 @@ const authSlice = createSlice({
         state.error = action.payload
       })
 
-      // Register
+      // REGISTER
       .addCase(register.pending, (state) => {
         state.loading = true
         state.error = null
@@ -132,7 +100,6 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false
         state.user = action.payload.user
-        state.token = action.payload.token
         state.isAuthenticated = true
       })
       .addCase(register.rejected, (state, action) => {
@@ -151,6 +118,7 @@ const authSlice = createSlice({
       })
       .addCase(checkAuth.rejected, (state) => {
         state.loading = false
+        state.user = null
         state.isAuthenticated = false
       })
 
