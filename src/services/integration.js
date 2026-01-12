@@ -1,48 +1,33 @@
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: '/api',
-})
+const API_BASE_URL =
+  import.meta.env.VITE_BACKEND_API_URL || '/api'
 
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
+const api = axios.create({
+  baseURL:API_BASE_URL,
+  withCredentials: true // cookies only
 })
 
 // Handle token refresh on 401 responses
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config
+  (res) => res,
+  (error) => {
+    const status = error.response?.status
+    const url = error.config?.url || ''
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
+    // 🔕 silent auth check fail
+    if (status === 401 && url.includes('/auth/profile')) {
+      return Promise.reject(error)
+    }
 
-      try {
-        const refreshToken = localStorage.getItem('refreshToken')
-        if (refreshToken) {
-          const response = await axios.post('/api/auth/refresh', { refreshToken })
-          const { token } = response.data
-          
-          localStorage.setItem('token', token)
-          originalRequest.headers.Authorization = `Bearer ${token}`
-          
-          return api(originalRequest)
-        }
-      } catch (refreshError) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('refreshToken')
-        window.location.href = '/login'
-      }
+    if (status === 401) {
+      window.location.href = '/login'
     }
 
     return Promise.reject(error)
   }
 )
+
 
 // Social Authentication API
 export const socialAuthAPI = {
@@ -130,3 +115,5 @@ export default {
   integrationSettingsAPI,
   analyticsAPI,
 }
+
+
