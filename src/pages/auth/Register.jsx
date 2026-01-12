@@ -346,6 +346,8 @@ const Register = () => {
 
   const [passwordStrength, setPasswordStrength] = useState(0);
 
+  const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL
+
   // Sample images for the slider
   const sliderImages = [
     "https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80",
@@ -420,8 +422,17 @@ const Register = () => {
   };
 
   const handleSocialLogin = (provider) => {
-    console.log(`Initiating ${provider} OAuth registration`)
-    window.location.href = `/api/auth/${provider}?returnUrl=/dashboard`
+  if (provider === 'apple') {
+    toast.error('Apple login coming soon')
+    return
+  }
+
+  console.log(`Initiating ${provider} OAuth`)
+
+  window.open(
+    `${BACKEND_API_URL}/auth/${provider}?action=login`,
+    '_self'
+  )
   }
 
   useEffect(() => {
