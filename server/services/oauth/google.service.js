@@ -4,7 +4,7 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
 const GOOGLE_REDIRECT_URI = 'http://localhost:5000/api/auth/callback'
 
-console.log('Google OAuth Config:', GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI)
+
 
 export const getGoogleAuthUrl = (state = '') => {
   const params = new URLSearchParams({
@@ -21,33 +21,31 @@ export const getGoogleAuthUrl = (state = '') => {
 }
 
 export const exchangeCodeForToken = async (code) => {
-  try {
-    const  { data }  = await axios.post('https://oauth2.googleapis.com/token', {
-      client_id: GOOGLE_CLIENT_ID,
-      client_secret: GOOGLE_CLIENT_SECRET,
-      code: code,
-      grant_type: 'authorization_code',
-      redirect_uri: GOOGLE_REDIRECT_URI
-    }, {
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    client_secret: GOOGLE_CLIENT_SECRET,
+    code,
+    grant_type: 'authorization_code',
+    redirect_uri: GOOGLE_REDIRECT_URI
+  })
+
+  const { data } = await axios.post(
+    'https://oauth2.googleapis.com/token',
+    params.toString(),
+    {
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
       }
     }
   )
 
-
-    if (!data.access_token) {
-      throw new Error(data.error_description || 'Google OAuth failed')
-    }
-
-    return {
-      accessToken: data.access_token,
-    }
-  } catch (error) {
-    console.error('Google token exchange error:', error)
-    throw new Error('Failed to exchange Google code for token')
+  if (!data.access_token) {
+    throw new Error('Google OAuth failed')
   }
+
+  return data.access_token
 }
+
 
 export const getGoogleUser = async (accessToken) => {
   try {
