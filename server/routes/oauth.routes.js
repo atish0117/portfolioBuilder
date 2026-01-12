@@ -8,7 +8,10 @@ import {
 
 const router = express.Router()
 
-router.get('/:provider', startOAuth)
 router.get('/callback', oauthCallback)
+router.get('/:provider', (req, res) => {
+  return startOAuth(req.params.provider)(req, res)
+})
+
 
 export default router
