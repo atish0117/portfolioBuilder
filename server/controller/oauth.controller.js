@@ -29,6 +29,11 @@ import {
 /* ================= START OAUTH ================= */
 
 export const startOAuth = (provider) => (req, res) => {
+
+  console.log('START OAUTH HIT:', provider)
+
+ 
+
   const state = buildOAuthState({
     provider,
     action: req.query.action || 'login', // login | connect | sync
@@ -42,12 +47,27 @@ export const startOAuth = (provider) => (req, res) => {
     linkedin: getLinkedInAuthUrl
   }
 
-  return res.redirect(map[provider](state))
+   // 🔐 SAFETY CHECK (VERY IMPORTANT)
+  if (!map[provider]) {
+    console.error('Invalid OAuth provider:', provider)
+    return res
+      .status(400)
+      .send('Invalid OAuth provider')
+  }
+
+   const redirectUrl = map[provider](state)
+
+  console.log('REDIRECT URL:', redirectUrl) // 👈 VERY IMPORTANT
+
+  return res.redirect(redirectUrl)
 }
 
 /* ================= OAUTH CALLBACK ================= */
 
 export const oauthCallback = async (req, res) => {
+
+  console.log('OAUTH CALLBACK HIT', req.query)
+
   try {
     const { code, state } = req.query
     const payload = parseOAuthState(state)
