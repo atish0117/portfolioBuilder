@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = '/api'
+const API_BASE_URL =
+  import.meta.env.BACKEND_API_URL || '/api'
+
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,16 +13,25 @@ const api = axios.create({
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (
-      error.response?.status === 401 &&
-      !window.location.pathname.includes('/login')
-    ) {
-      // Optional: sirf protected pages pe redirect
-      console.warn('Session expired')
+    const status = error.response?.status
+    const url = error.config?.url || ''
+
+    // ✅ Ignore auth check failure
+    if (status === 401 && url.includes('/auth/profile')) {
+      return Promise.reject(error)
     }
+
+    // 🔐 Real session expiry (protected routes)
+    if (status === 401) {
+      console.warn('Session expired')
+      // optional:
+      // window.location.href = '/login'
+    }
+
     return Promise.reject(error)
   }
 )
+
 
 
 
