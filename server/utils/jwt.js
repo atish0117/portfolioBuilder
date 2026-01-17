@@ -7,10 +7,6 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1d'
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret'
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '30d'
 
-console.log('JWT_SECRET:', JWT_SECRET)
-console.log('JWT_EXPIRES_IN:', JWT_EXPIRES_IN)
-console.log('JWT_REFRESH_SECRET:', JWT_REFRESH_SECRET)
-console.log('JWT_REFRESH_EXPIRES_IN:', JWT_REFRESH_EXPIRES_IN)
 
 export const generateTokens = (user) => {
   const payload = {

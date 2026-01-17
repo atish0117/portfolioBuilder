@@ -228,7 +228,9 @@ const Login = () => {
   const navigate = useNavigate()
   const { loading, error } = useSelector((state) => state.auth);
 
+const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL
 
+// console.log(import.meta.env.BACKEND_API_URL)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -260,10 +262,25 @@ const Login = () => {
       toast.error(err || 'Login failed');
     }
   };
-  const handleSocialLogin = (provider) => {
-    console.log(`Initiating ${provider} OAuth`)
-    window.location.href = `/api/auth/${provider}?returnUrl=/dashboard`
+//  const handleSocialLogin = (provider) => {
+//     window.location.href = `/api/oauth/${provider}?returnUrl=/dashboard` 
+//     console.log(`after login Initiating ${provider} OAuth`)
+//    }
+
+    const handleSocialLogin = (provider) => {
+  if (provider === 'apple') {
+    toast.error('Apple login coming soon')
+    return
   }
+
+  console.log(`Initiating ${provider} OAuth`)
+
+  window.open(
+    `${BACKEND_API_URL}/auth/${provider}?action=login`,
+    '_self'
+  )
+}
+
 
   useEffect(() => {
     dispatch(clearError());

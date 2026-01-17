@@ -48,7 +48,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 // Routes
 app.use('/api/auth', authRoutes)
 // app.use('/api/auth', socialAuthRoutes)
-app.use('/api/oauth',oathuRoutes)
+app.use('/api/auth',oathuRoutes)
 app.use('/api/integrations', integrationsRoutes)
 app.use('/api/password', passwordRoutes)
 app.use('/api/portfolio', portfolioRoutes)
@@ -62,7 +62,6 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack)
   res.status(500).json({ 
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : {}

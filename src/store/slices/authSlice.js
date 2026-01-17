@@ -13,10 +13,14 @@ export const checkAuth = createAsyncThunk(
   'auth/checkAuth',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await authAPI.getProfile()
-      return response.data
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Authentication failed')
+      const res = await authAPI.getProfile()
+      return res.data
+    } catch (err) {
+      if (err.response?.status === 401) {
+        // 👇 EXPECTED CASE (not logged in)
+        return rejectWithValue(null)
+      }
+      return rejectWithValue('AUTH_CHECK_FAILED')
     }
   }
 )
@@ -113,7 +117,7 @@ const authSlice = createSlice({
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.loading = false
-        state.user = action.payload.user
+        state.user = action.payload.user || null
         state.isAuthenticated = true
       })
       .addCase(checkAuth.rejected, (state) => {
