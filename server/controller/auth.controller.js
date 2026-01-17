@@ -110,7 +110,12 @@ export const loginUser = async (req, res) => {
 //  GET PROFILE 
 export const getProfile = async (req, res) => {
   try {
-    res.json({ user: req.user })
+    const user =await User.findById(req.user._id)
+
+    res.status(200).json({
+      success:true,
+      user:user.toObject()
+    })
   } catch (error) {
     console.error('Get profile error:', error)
     res.status(500).json({ message: 'Failed to fetch profile' })
@@ -136,15 +141,15 @@ export const updateProfile = async (req, res) => {
       }
     })
 
-    const user = await User.findByIdAndUpdate(
+    const userDoc = await User.findByIdAndUpdate(
       req.user._id,
       updateData,
       { new: true, runValidators: true }
-    ).select('-password')
+    )
 
-    res.json({
-      message: 'Profile updated successfully',
-      user
+    res.status(200).json({
+      success:true,
+      user:userDoc.toObject()
     })
   } catch (error) {
     console.error('Update profile error:', error)
