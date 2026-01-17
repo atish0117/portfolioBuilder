@@ -1017,7 +1017,7 @@ const NeonCyberpunkTemplate = ({
                   <form className="bg-gray-900/40 border border-cyan-500/20 rounded-xl p-8 backdrop-blur-md text-left space-y-6">
                     <div>
                       <label className="block text-cyan-400 mb-2">
-                        > YOUR_NAME:
+                        &gt; YOUR_NAME:
                       </label>
                       <input
                         type="text"
@@ -1026,7 +1026,7 @@ const NeonCyberpunkTemplate = ({
                     </div>
                     <div>
                       <label className="block text-cyan-400 mb-2">
-                        > YOUR_EMAIL:
+                        &gt; YOUR_EMAIL:
                       </label>
                       <input
                         type="email"
@@ -1035,7 +1035,7 @@ const NeonCyberpunkTemplate = ({
                     </div>
                     <div>
                       <label className="block text-cyan-400 mb-2">
-                        > YOUR_MESSAGE:
+                        &gt; YOUR_MESSAGE:
                       </label>
                       <textarea
                         rows="4"

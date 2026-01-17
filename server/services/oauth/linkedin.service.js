@@ -5,7 +5,6 @@ const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID
 const LINKEDIN_CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET
 const LINKEDIN_REDIRECT_URI = 'http://localhost:5000/api/auth/callback'
 
-console.log( "LinkedIn OAuth Config:", LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET, LINKEDIN_REDIRECT_URI)
 export const getLinkedInAuthUrl = (state = '') => {
   const params = new URLSearchParams({
     response_type: 'code',

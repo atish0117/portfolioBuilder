@@ -41,9 +41,8 @@ router.get('/github', (req, res) => {
       allow_signup: 'true'
     })
 
-    const authUrl = getGitHubAuthUrl(state);
-
-    res.redirect(authUrl);
+  const authUrl = getGitHubAuthUrl(state);
+  res.redirect(authUrl);
 
     // const authUrl = `https://github.com/login/oauth/authorize?${params.toString()}`
     // res.redirect(authUrl)
@@ -105,76 +104,6 @@ router.get('/linkedin', (req, res) => {
   }
 })
 
-// GitHub Token Exchange
-// const exchangeGitHubCode = async (code) => {
-//   try {
-//     const response = await fetch('https://github.com/login/oauth/access_token', {
-//       method: 'POST',
-//       headers: {
-//         'Accept': 'application/json',
-//         'Content-Type': 'application/json',
-//         'User-Agent': 'Portfolio-Builder'
-//       },
-//       body: JSON.stringify({
-//         client_id: GITHUB_CLIENT_ID,
-//         client_secret: GITHUB_CLIENT_SECRET,
-//         code: code
-//       })
-//     })
-
-//     const data = await response.json()
-    
-//     if (data.error) {
-//       throw new Error(data.error_description || 'GitHub OAuth error')
-//     }
-
-//     return data.access_token
-//   } catch (error) {
-//     console.error('GitHub token exchange error:', error)
-//     throw new Error('Failed to exchange GitHub code for token')
-//   }
-// }
-
-// GitHub User Data
-// const getGitHubUser = async (accessToken) => {
-//   try {
-//     const [userResponse, emailsResponse] = await Promise.all([
-//       fetch('https://api.github.com/user', {
-//         headers: {
-//           'Authorization': `token ${accessToken}`,
-//           'User-Agent': 'Portfolio-Builder'
-//         }
-//       }),
-//       fetch('https://api.github.com/user/emails', {
-//         headers: {
-//           'Authorization': `token ${accessToken}`,
-//           'User-Agent': 'Portfolio-Builder'
-//         }
-//       })
-//     ])
-
-//     const user = await userResponse.json()
-//     const emails = await emailsResponse.json()
-//     const primaryEmail = emails.find(email => email.primary)?.email || emails[0]?.email
-
-//     return {
-//       id: user.id.toString(),
-//       username: user.login,
-//       email: primaryEmail,
-//       fullName: user.name || user.login,
-//       profileImgUrl: user.avatar_url,
-//       bio: user.bio,
-//       location: user.location,
-//       profileUrl: user.html_url,
-//       publicRepos: user.public_repos,
-//       followers: user.followers,
-//       following: user.following
-//     }
-//   } catch (error) {
-//     console.error('GitHub user fetch error:', error)
-//     throw new Error('Failed to fetch GitHub user data')
-//   }
-// }
 
 // Google Token Exchange
 const exchangeGoogleCode = async (code) => {
@@ -413,12 +342,12 @@ router.get('/callback', async (req, res) => {
             id: userData.id,
             username: userData.username || userData.email,
             accessToken: accessToken,
-            profileUrl: userData.profileUrl || userData.url,
+            profileUrl: userData.profileImgUrl || userData.url,
             lastSync: new Date()
           }
         },
         socialLinks: {
-          [provider]: userData.profileUrl || userData.url
+          [provider]: userData.profileImgUrl || userData.url
         }
       })
 
@@ -742,3 +671,5 @@ const syncGoogleData = async (user, accessToken) => {
 }
 
 export default router
+
+
