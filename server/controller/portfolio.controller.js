@@ -6,44 +6,15 @@ export const getPublicPortfolio = async (req, res) => {
   try {
     const { username } = req.params
 
-    const user = await User.findOne({ username }).select('-password')
-    if (!user) {
+    const userDoc = await User.findOne({ username })
+    if (!userDoc) {
       return res.status(404).json({ message: 'Portfolio not found' })
     }
 
-    const projects = await Project.find({ userId: user._id })
-
-    res.json({
-      user: {
-        fullName: user.fullName,
-        email: user.email,
-        username: user.username,
-        profileImgUrl: user.profileImgUrl,
-        resumeUrl: user.resumeUrl,
-        title: user.title,
-        phoneNumber: user.phoneNumber,
-        location: user.location,
-        tagLine: user.tagLine,
-        socialLinks: user.socialLinks,
-        intro: user.intro,
-        aboutSections: user.aboutSections,
-        availability: user.availability,
-        hourlyRate: user.hourlyRate,
-        preferredWorkType: user.preferredWorkType,
-        languages: user.languages,
-        timezone: user.timezone,
-        skills: user.skills,
-        workExperience: user.workExperience,
-        experienceDetails: user.experienceDetails,
-        education: user.education,
-        testimonials: user.testimonials,
-        certifications: user.certifications,
-        sectionOrder: user.sectionOrder,
-        visibleSections: user.visibleSections,
-        selectedTemplate: user.selectedTemplate,
-        role: user.role,
-        status: user.status
-      },
+    const projects = await Project.find({ userId: userDoc._id })
+    const user =userDoc.toObject()
+    res.status(200).json({
+      user,
       projects
     })
   } catch (error) {
@@ -142,36 +113,15 @@ export const updateProfile = async (req, res) => {
       }
     })
 
-    const user = await User.findByIdAndUpdate(
+    const userDoc = await User.findByIdAndUpdate(
       req.user._id,
       updateData,
       { new: true, runValidators: true }
-    ).select('-password')
+    )
 
-    res.json({
+    res.status(200).json({
       message: 'Profile updated successfully',
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        username: user.username,
-        email: user.email,
-        profileImgUrl: user.profileImgUrl,
-        resumeUrl: user.resumeUrl,
-        title: user.title,
-        tagLine: user.tagLine,
-        socialLinks: user.socialLinks,
-        skills: user.skills,
-        workExperience: user.workExperience,
-        experienceDetails: user.experienceDetails,
-        education: user.education,
-        testimonials: user.testimonials,
-        certifications: user.certifications,
-        sectionOrder: user.sectionOrder,
-        visibleSections: user.visibleSections,
-        selectedTemplate: user.selectedTemplate,
-        role: user.role,
-        status: user.status
-      }
+      user:userDoc.toObject()
     })
   } catch (error) {
     console.error('Update profile error:', error)

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { stringify } from "postcss";
 
 const userSchema = new mongoose.Schema(
   {
@@ -100,7 +101,38 @@ connections: {
       website: String,
       
     },
-    skills: [{ type: String }],
+    skills: [{ type: String }], // old skills schema 
+
+    // new skills schema
+    skills:[
+    {
+      name:{
+        type:String,
+        required:true,
+        trim:true
+      },
+      icons:{
+        type:String,
+        default:""
+      },
+      level:{
+        type:String,
+        enum:['beginner', 'intermediate','advanced','expert'],
+        default:'intermedial'
+      },
+      yearsOfExperience:{
+        type:Number,
+        default:0,
+        min:0,
+        max:50,
+        
+      },
+      isPrimary:{
+        type:Boolean,
+        default:false
+      }
+    }
+  ],
 
       aboutSections: [{
       id: String,
@@ -116,7 +148,7 @@ connections: {
       enum: ["remote", "onsite", "hybrid", "freelance"],
       default: "remote"
     },
-     availability: {
+    availability: {
       type: String,
       enum: ["available", "busy", "not-available","currently-working",],
       default: "available"
@@ -265,6 +297,27 @@ userSchema.pre("validate", async function (next) {
   next();
 });
 
+//virtual skills percentage calculate
+const levelWeight={
+  beginner:25,
+  intermediate:50,
+  advanced:75,
+  expert:95
+}
+userSchema.virtual('skillsWithPercentage').get(function(){
+  if(!this.skills) return []
+
+  return this.skills.map(skill=>{
+    const base=levelWeight[skill.level] || 0
+    const bonus= (skill.yearsOfExperience || 0)*2
+    const percentage=Math.min(base+bonus,100)
+    return{
+      ...skill.toObject(),
+      percentage
+    }
+  })
+})
+
 const sanitize = (_, ret) => {
   delete ret.password
   delete ret.__v
@@ -280,8 +333,14 @@ const sanitize = (_, ret) => {
   return ret
 }
 
-userSchema.set('toJSON', { transform: sanitize })
-userSchema.set('toObject', { transform: sanitize })
+userSchema.set('toJSON', { 
+  virtuals:true,
+  transform: sanitize
+})
+userSchema.set('toObject', {
+virtuals:true,
+transform: sanitize 
+})
 
 
 export default mongoose.model("User", userSchema);
