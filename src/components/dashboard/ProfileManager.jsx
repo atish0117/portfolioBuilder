@@ -8,20 +8,35 @@ import SunEditor from 'suneditor-react'
 import 'suneditor/dist/css/suneditor.min.css'
 import DOMPurify from 'dompurify'
 
+const emptySkill = {
+  name: '',
+  icon: '',
+  category: 'Other',
+  level: 'intermediate',
+  yearsOfExperience: 0,
+  isPrimary: false
+}
+
+const levelWeight = {
+  beginner: 40,
+  intermediate: 60,
+  advanced: 75,
+  expert: 90
+}
+
 const ProfileManager = () => {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
 
   const [saving, setSaving] = useState(false)
   const [activeSection, setActiveSection] = useState('basic')
+  const [activeSkillIndex, setActiveSkillIndex] = useState(null)
 
   const [profileData, setProfileData] = useState({
     fullName: user?.fullName || '',
     title: user?.title || '',
-
     tagLine: user?.tagLine || '',
-    
-    skills: user?.skills?.join(', ') || '',
+    skills: user?.skills || [{ ...emptySkill }],
     workExperience: user?.workExperience || 'Fresher',
     phoneNumber: user?.phoneNumber || '',
     location: user?.location || '', 
@@ -37,7 +52,6 @@ const ProfileManager = () => {
       github: user?.socialLinks?.github || '',
       linkedin: user?.socialLinks?.linkedin || '',
       twitter: user?.socialLinks?.twitter || '',
-
       instagram: user?.socialLinks?.instagram || '',
       dribbble: user?.socialLinks?.dribbble || '',
       behance: user?.socialLinks?.behance || '',
@@ -46,6 +60,98 @@ const ProfileManager = () => {
     aboutSections: user?.aboutSections || [{ id: Date.now(), title: '', description: '' }],
 
   })
+
+      // SKILL CONSTANTS 
+const SKILL_CATEGORIES = [
+  // Core skill types
+  'Technical',
+  'Creative',
+  'Communication',
+  'Management',
+  'Leadership',
+
+  // Business & growth
+  'Marketing',
+  'Sales',
+  'Customer Support',
+  'Business Strategy',
+  'Entrepreneurship',
+
+  // Operations & organization
+  'Operations',
+  'Administration',
+  'Project Management',
+  'Process Improvement',
+  'Quality Assurance',
+
+  // Finance & legal
+  'Finance',
+  'Accounting',
+  'Legal & Compliance',
+
+  // Data & analysis
+  'Data Analysis',
+  'Research',
+  'Reporting',
+
+  // People & training
+  'Human Resources',
+  'Training & Development',
+  'Coaching & Mentoring',
+
+  // Health, education & social
+  'Education',
+  'Healthcare',
+  'Psychology & Counseling',
+  'Social Work',
+
+  // Digital & tools
+  'Tools',
+  'Software',
+  'Automation',
+  'Digital Literacy',
+
+  // Language & culture
+  'Languages',
+  'Writing & Documentation',
+  'Public Speaking',
+
+  // Creative specializations
+  'Design',
+  'Content Creation',
+  'Video & Audio',
+  'Photography',
+
+  // Trade & field work
+  'Field Work',
+  'Maintenance',
+  'Manufacturing',
+  'Logistics',
+  'Supply Chain',
+
+  // General
+  'Problem Solving',
+  'Critical Thinking',
+  'Time Management',
+  'Adaptability',
+
+  // Catch-all
+  'Other'
+]
+
+
+const LOCAL_SKILL_ICONS = [
+  { label: 'React', value: '/assets/skill-icons/react.svg' },
+  { label: 'Node', value: '/assets/skill-icons/node.svg' },
+  { label: 'Figma', value: '/assets/skill-icons/figma.svg' },
+  { label: 'Excel', value: '/assets/skill-icons/excel.svg' },
+  { label: 'Communication', value: '/assets/skill-icons/communication.svg' },
+]
+
+const ADMIN_SKILL_ICONS = [
+  { label: 'JavaScript', value: 'https://res.cloudinary.com/demo/image/upload/js.svg' },
+  { label: 'MongoDB', value: 'https://res.cloudinary.com/demo/image/upload/mongo.svg' },
+]
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -66,6 +172,97 @@ const ProfileManager = () => {
       }))
     }
   }
+
+    // skills HELPERS 
+const getSkillIconUrl = (name, icon) => {
+  if (icon) return icon
+  const seed = encodeURIComponent(name || 'Skill')
+  return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}`
+}
+
+const getSkillPercentagePreview = (skill) => {
+  const base = levelWeight[skill.level] || 0
+  const bonus = (skill.yearsOfExperience || 0) * 8
+  return Math.min(base + bonus, 100)
+}
+
+const addSkill = () => {
+    setProfileData(prev => ({
+      ...prev,
+      skills: [...prev.skills, { ...emptySkill }]
+    }))
+  }
+
+  const removeSkill = (index) => {
+    setProfileData(prev => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }))
+  }
+
+  const updateSkill = (index, field, value) => {
+    const updated = [...profileData.skills]
+    updated[index][field] = value
+
+    if (field === 'isPrimary' && value === true) {
+      updated.forEach((s, i) => {
+        if (i !== index) s.isPrimary = false
+      })
+    }
+
+    setProfileData(prev => ({ ...prev, skills: updated }))
+  }
+
+
+// for skills validations
+const validateSkills = (skills) => {
+  if (!skills.length) {
+    toast.error('Add at least one skill')
+    return false
+  }
+
+  const names = skills.map(s => s.name.trim().toLowerCase()).filter(Boolean)
+  if (names.length !== skills.length) {
+    toast.error('Skill name cannot be empty')
+    return false
+  }
+
+  if (new Set(names).size !== names.length) {
+    toast.error('Duplicate skills are not allowed')
+    return false
+  }
+
+  if (skills.filter(s => s.isPrimary).length > 1) {
+    toast.error('Only one primary skill allowed')
+    return false
+  }
+
+  if (skills.length > 15) {
+    toast.error('Maximum 15 skills allowed')
+    return false
+  }
+
+  return true
+}
+
+// CLOUDINARY image store for skills
+const uploadSkillIcon = async (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', 'skill_icons')
+
+  const res = await fetch(
+    'https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload',
+    { method: 'POST', body: formData }
+  )
+
+  const data = await res.json()
+  return data.secure_url
+}
+
+
+
+
 
         // Handler for the about sections array
   const handleAboutSectionChange = (index, field, value) => {
@@ -98,18 +295,29 @@ const ProfileManager = () => {
     return clean.trim().length
   }
 
+       /* ---------- SAVE ---------- */
   const handleSaveProfile = async () => {
     setSaving(true)
     try {
+
+       //Clean & validate skills
+    const cleanSkills = profileData.skills.filter(
+      s => s.name && s.name.trim() !== ''
+    )
+
+    if (!validateSkills(cleanSkills)) {
+      setSaving(false)
+      return
+    }
+      // Prepare full update payload
       const updateData = {
         ...profileData,
-        skills: profileData.skills.split(',').map(skill => skill.trim()).filter(Boolean),
-
+        skills: cleanSkills,
         languages: profileData.languages.split(',').map(lang => lang.trim()).filter(Boolean),
         aboutSections: profileData.aboutSections.filter(section => section.title.trim() !== '' || getCleanTextLength(section.description) > 0),
 
       }
-
+            // Dispatch update
       await dispatch(updateProfile(updateData)).unwrap()
       toast.success('Profile updated successfully!')
     } catch (error) {
@@ -256,23 +464,200 @@ const ProfileManager = () => {
         </p>
       </div>
 
+              {/* skilss */}
+              <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Skills</h2>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Skills (comma-separated)
-              </label>
-              <input
-                type="text"
-                name="skills"
-                value={profileData.skills}
-                onChange={handleInputChange}
-                placeholder="React, Node.js, Python, etc."
-                className="input-field"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Separate skills with commas
-              </p>
-            </div>
+      {profileData.skills.map((skill, index) => {
+  const isOpen = activeSkillIndex === index
+
+  return (
+    <div key={index} className="border rounded-lg overflow-hidden">
+
+      {/* COLLAPSED HEADER */}
+      <button
+        type="button"
+        onClick={() =>
+          setActiveSkillIndex(isOpen ? null : index)
+        }
+        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-700"
+      >
+        <div className="flex items-center gap-3">
+          <img
+            src={getSkillIconUrl(skill.name, skill.icon)}
+            className="w-8 h-8 rounded"
+            alt="icon"
+          />
+
+          <div className="text-left">
+            <p className="font-medium">
+              {skill.name || 'Untitled Skill'}
+              {skill.isPrimary && (
+                <span className="ml-2 text-xs text-green-600">
+                  ★ Primary
+                </span>
+              )}
+            </p>
+            <p className="text-xs text-gray-500">
+              {skill.category} • {getSkillPercentagePreview(skill)}%
+            </p>
+          </div>
+        </div>
+
+        <span className="text-sm">
+          {isOpen ? '▲' : '▼'}
+        </span>
+      </button>
+
+      {isOpen && (
+  <div className="p-4 space-y-4 bg-white dark:bg-dark-800">
+
+    {/* ICON PICKER */}
+    <div className="flex items-center gap-3 flex-wrap">
+      <img
+        src={getSkillIconUrl(skill.name, skill.icon)}
+        className="w-10 h-10 rounded"
+        alt="skill"
+      />
+
+      {LOCAL_SKILL_ICONS.map(icon => (
+        <button
+          key={icon.label}
+          type="button"
+          onClick={() => updateSkill(index, 'icon', icon.value)}
+          className="border p-1 rounded"
+        >
+          <img src={icon.value} className="w-6 h-6" />
+        </button>
+      ))}
+
+      {ADMIN_SKILL_ICONS.map(icon => (
+        <button
+          key={icon.label}
+          type="button"
+          onClick={() => updateSkill(index, 'icon', icon.value)}
+          className="border p-1 rounded"
+        >
+          <img src={icon.value} className="w-6 h-6" />
+        </button>
+      ))}
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={async (e) => {
+          const file = e.target.files[0]
+          if (!file) return
+          const url = await uploadSkillIcon(file)
+          updateSkill(index, 'icon', url)
+        }}
+      />
+    </div>
+
+    {/* NAME */}
+    <input
+      placeholder="Skill name"
+      value={skill.name}
+      onChange={e => updateSkill(index, 'name', e.target.value)}
+      className="input-field"
+    />
+
+    {/* CATEGORY */}
+    <select
+      value={skill.category}
+      onChange={e => updateSkill(index, 'category', e.target.value)}
+      className="input-field"
+    >
+      {SKILL_CATEGORIES.map(cat => (
+        <option key={cat} value={cat}>{cat}</option>
+      ))}
+    </select>
+
+    {/* LEVEL + EXPERIENCE (2 column) */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <select
+        value={skill.level}
+        onChange={e => updateSkill(index, 'level', e.target.value)}
+        className="input-field"
+      >
+        <option value="beginner">Beginner</option>
+        <option value="intermediate">Intermediate</option>
+        <option value="advanced">Advanced</option>
+        <option value="expert">Expert</option>
+      </select>
+
+      <input
+        type="number"
+        min="0"
+        value={skill.yearsOfExperience}
+        onChange={e =>
+          updateSkill(index, 'yearsOfExperience', Number(e.target.value))
+        }
+        className="input-field"
+        placeholder="Years of experience"
+      />
+    </div>
+
+    {/* PRIMARY */}
+    <label className="flex gap-2 text-sm">
+      <input
+        type="checkbox"
+        checked={skill.isPrimary}
+        onChange={e =>
+          updateSkill(index, 'isPrimary', e.target.checked)
+        }
+      />
+      Primary Skill
+    </label>
+
+    {/* PREVIEW */}
+    <div>
+      <div className="flex justify-between text-xs">
+        <span>Skill Strength</span>
+        <span>{getSkillPercentagePreview(skill)}%</span>
+      </div>
+      <div className="h-2 bg-gray-200 rounded">
+        <div
+          className="h-2 bg-green-500 rounded"
+          style={{ width: `${getSkillPercentagePreview(skill)}%` }}
+        />
+      </div>
+    </div>
+
+    {/* REMOVE */}
+    {profileData.skills.length > 1 && (
+      <button
+        type="button"
+        onClick={() => removeSkill(index)}
+        className="text-red-500 text-sm"
+      >
+        Remove Skill
+      </button>
+    )}
+  </div>
+)}
+</div>
+)
+})}
+
+
+
+     <div className="flex flex-wrap gap-3 pt-4">
+  <button onClick={addSkill} className="btn-secondary">
+    + Add Skill
+  </button>
+
+  <button
+    onClick={handleSaveProfile}
+    disabled={saving}
+    className="btn-primary"
+  >
+    {saving ? 'Saving...' : 'Save Skills'}
+  </button>
+</div>
+
+              </div>
+              
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
