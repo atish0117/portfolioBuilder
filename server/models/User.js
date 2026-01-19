@@ -111,9 +111,13 @@ connections: {
         required:true,
         trim:true
       },
-      icons:{
+      icon:{
         type:String,
         default:""
+      },
+      category:{
+        type:String,
+        default:"Other"
       },
       level:{
         type:String,
