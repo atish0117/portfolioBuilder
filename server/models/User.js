@@ -111,10 +111,16 @@ connections: {
         required:true,
         trim:true
       },
-      icons:{
+ change/skill-feature
+      icon:{
         type:String,
         default:""
       },
+      category:{
+        type:String,
+        default:"Other"
+      },
+
       level:{
         type:String,
         enum:['beginner', 'intermediate','advanced','expert'],
