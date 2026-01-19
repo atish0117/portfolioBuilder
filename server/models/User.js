@@ -111,7 +111,6 @@ connections: {
         required:true,
         trim:true
       },
- change/skill-feature
       icon:{
         type:String,
         default:""
