@@ -1,12 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState,useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDispatch, useSelector } from 'react-redux'
-import { updateProfile } from '../../store/slices/authSlice'
+import { updateProfile, updateSkills } from "../../store/slices/authSlice"
 import FileUpload from '../ui/FileUpload'
 import toast from 'react-hot-toast'
 import SunEditor from 'suneditor-react'
 import 'suneditor/dist/css/suneditor.min.css'
 import DOMPurify from 'dompurify'
+import IconWheel from "../ui/IconWheel"
+import { getAllIconsForSkill } from "../../utils/getSkillIcons"
+import { getFinalSkillIcon } from "../../utils/iconResolver"
 
 const emptySkill = {
   name: '',
@@ -31,6 +34,8 @@ const ProfileManager = () => {
   const [saving, setSaving] = useState(false)
   const [activeSection, setActiveSection] = useState('basic')
   const [activeSkillIndex, setActiveSkillIndex] = useState(null)
+const [wheelSkillIndex, setWheelSkillIndex] = useState(null)
+const [resolvedIcons, setResolvedIcons] = useState({})
 
   const [profileData, setProfileData] = useState({
     fullName: user?.fullName || '',
@@ -140,19 +145,6 @@ const SKILL_CATEGORIES = [
 ]
 
 
-const LOCAL_SKILL_ICONS = [
-  { label: 'React', value: '/assets/skill-icons/react.svg' },
-  { label: 'Node', value: '/assets/skill-icons/node.svg' },
-  { label: 'Figma', value: '/assets/skill-icons/figma.svg' },
-  { label: 'Excel', value: '/assets/skill-icons/excel.svg' },
-  { label: 'Communication', value: '/assets/skill-icons/communication.svg' },
-]
-
-const ADMIN_SKILL_ICONS = [
-  { label: 'JavaScript', value: 'https://res.cloudinary.com/demo/image/upload/js.svg' },
-  { label: 'MongoDB', value: 'https://res.cloudinary.com/demo/image/upload/mongo.svg' },
-]
-
   const handleInputChange = (e) => {
     const { name, value } = e.target
 
@@ -174,11 +166,20 @@ const ADMIN_SKILL_ICONS = [
   }
 
     // skills HELPERS 
-const getSkillIconUrl = (name, icon) => {
-  if (icon) return icon
-  const seed = encodeURIComponent(name || 'Skill')
-  return `https://api.dicebear.com/9.x/initials/svg?seed=${seed}`
-}
+useEffect(() => {
+  const resolveIcons = async () => {
+    const iconMap = {}
+
+    for (let i = 0; i < profileData.skills.length; i++) {
+      const skill = profileData.skills[i]
+      iconMap[i] = await getFinalSkillIcon(skill)
+    }
+
+    setResolvedIcons(iconMap)
+  }
+
+  resolveIcons()
+}, [profileData.skills])
 
 const getSkillPercentagePreview = (skill) => {
   const base = levelWeight[skill.level] || 0
@@ -200,19 +201,20 @@ const addSkill = () => {
     }))
   }
 
-  const updateSkill = (index, field, value) => {
-    const updated = [...profileData.skills]
-    updated[index][field] = value
+const updateSkill = (index, field, value) => {
+  setProfileData(prev => {
+    const updated = [...prev.skills]
+    updated[index] = { ...updated[index], [field]: value }
 
-    if (field === 'isPrimary' && value === true) {
+    if (field === "isPrimary" && value === true) {
       updated.forEach((s, i) => {
-        if (i !== index) s.isPrimary = false
+        if (i !== index)  updated[i] = { ...s, isPrimary: false }
       })
     }
 
-    setProfileData(prev => ({ ...prev, skills: updated }))
-  }
-
+    return { ...prev, skills: updated }
+  })
+}
 
 // for skills validations
 const validateSkills = (skills) => {
@@ -247,19 +249,55 @@ const validateSkills = (skills) => {
 
 // CLOUDINARY image store for skills
 const uploadSkillIcon = async (file) => {
+  console.log("FILE:", file)
+
   const formData = new FormData()
-  formData.append('file', file)
-  formData.append('upload_preset', 'skill_icons')
+  formData.append("file", file)
+  formData.append("upload_preset", "skill_icons")
 
   const res = await fetch(
-    'https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload',
-    { method: 'POST', body: formData }
+    "https://api.cloudinary.com/v1_1/djtxvaxwe/image/upload",
+    {
+      method: "POST",
+      body: formData
+    }
   )
 
   const data = await res.json()
+  console.log("CLOUDINARY RESPONSE:", data)
+
+  if (!res.ok) {
+    console.error("Cloudinary error:", data)
+    throw new Error(data.error?.message || "Upload failed")
+  }
+
   return data.secure_url
 }
 
+
+const handleSaveSkills = async () => {
+  setSaving(true)
+
+  try {
+    const cleanSkills = profileData.skills.filter(
+      s => s.name && s.name.trim() !== ""
+    )
+
+    if (!validateSkills(cleanSkills)) {
+      setSaving(false)
+      return
+    }
+
+    await dispatch(updateSkills({ skills: cleanSkills })).unwrap()
+
+    toast.success("Skills saved successfully")
+  } catch (err) {
+    toast.error("Skill update failed")
+    console.error("Skill update failed", err)
+  } finally {
+    setSaving(false)
+  }
+}
 
 
 
@@ -312,7 +350,6 @@ const uploadSkillIcon = async (file) => {
       // Prepare full update payload
       const updateData = {
         ...profileData,
-        skills: cleanSkills,
         languages: profileData.languages.split(',').map(lang => lang.trim()).filter(Boolean),
         aboutSections: profileData.aboutSections.filter(section => section.title.trim() !== '' || getCleanTextLength(section.description) > 0),
 
@@ -344,7 +381,7 @@ const uploadSkillIcon = async (file) => {
     { id: 'basic', label: 'Basic Info', icon: '👤' },
     { id: 'about', label: 'About Me', icon: '📝' },
     { id: 'social', label: 'Social Links', icon: '🔗' },
-     { id: 'contact', label: 'Contact', icon: '📞' },
+    { id: 'contact', label: 'Contact', icon: '📞' },
 
     { id: 'files', label: 'Files', icon: '📁' },
   ]
@@ -464,7 +501,7 @@ const uploadSkillIcon = async (file) => {
         </p>
       </div>
 
-              {/* skilss */}
+              {/* skills */}
               <div className="space-y-6">
       <h2 className="text-2xl font-bold">Skills</h2>
 
@@ -484,7 +521,7 @@ const uploadSkillIcon = async (file) => {
       >
         <div className="flex items-center gap-3">
           <img
-            src={getSkillIconUrl(skill.name, skill.icon)}
+            src={resolvedIcons[index]}
             className="w-8 h-8 rounded"
             alt="icon"
           />
@@ -512,47 +549,51 @@ const uploadSkillIcon = async (file) => {
       {isOpen && (
   <div className="p-4 space-y-4 bg-white dark:bg-dark-800">
 
-    {/* ICON PICKER */}
-    <div className="flex items-center gap-3 flex-wrap">
-      <img
-        src={getSkillIconUrl(skill.name, skill.icon)}
-        className="w-10 h-10 rounded"
-        alt="skill"
-      />
+    {/* ICON PICKER */}  
+<div className="space-y-3">
 
-      {LOCAL_SKILL_ICONS.map(icon => (
-        <button
-          key={icon.label}
-          type="button"
-          onClick={() => updateSkill(index, 'icon', icon.value)}
-          className="border p-1 rounded"
-        >
-          <img src={icon.value} className="w-6 h-6" />
-        </button>
-      ))}
+  <div className="flex items-center gap-3">
+    <img
+      src={resolvedIcons[index]}
+      className="w-12 h-12 rounded border"
+      alt="skill"
+    />
 
-      {ADMIN_SKILL_ICONS.map(icon => (
-        <button
-          key={icon.label}
-          type="button"
-          onClick={() => updateSkill(index, 'icon', icon.value)}
-          className="border p-1 rounded"
-        >
-          <img src={icon.value} className="w-6 h-6" />
-        </button>
-      ))}
+    <span className="text-xs text-gray-500">
+      Click icon below to change
+    </span>
+  </div>
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={async (e) => {
-          const file = e.target.files[0]
-          if (!file) return
-          const url = await uploadSkillIcon(file)
-          updateSkill(index, 'icon', url)
-        }}
-      />
-    </div>
+  <div className="flex items-center gap-3">
+  <img
+    src={resolvedIcons[index]}
+    className="w-12 h-12 rounded border cursor-pointer"
+    alt="skill"
+    onClick={() => setWheelSkillIndex(index)}
+  />
+
+  <button
+    type="button"
+    onClick={() => setWheelSkillIndex(index)}
+    className="text-xs text-blue-500"
+  >
+    Choose icon
+  </button>
+</div>
+
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={async (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      const url = await uploadSkillIcon(file)
+      updateSkill(index, "icon", url)
+    }}
+  />
+</div>
+
 
     {/* NAME */}
     <input
@@ -636,24 +677,34 @@ const uploadSkillIcon = async (file) => {
     )}
   </div>
 )}
+
+{wheelSkillIndex !== null && (
+  <IconWheel
+    skillName={profileData.skills[wheelSkillIndex]?.name}
+    onSelect={(icon) =>
+      updateSkill(wheelSkillIndex, "icon", icon)
+    }
+    onClose={() => setWheelSkillIndex(null)}
+  />
+)}
+
 </div>
 )
 })}
 
-
-
-     <div className="flex flex-wrap gap-3 pt-4">
+    <div className="flex flex-wrap gap-3 pt-4">
   <button onClick={addSkill} className="btn-secondary">
     + Add Skill
   </button>
 
-  <button
-    onClick={handleSaveProfile}
-    disabled={saving}
-    className="btn-primary"
-  >
-    {saving ? 'Saving...' : 'Save Skills'}
-  </button>
+<button
+  onClick={handleSaveSkills}
+  disabled={saving}
+  className="btn-primary"
+>
+  {saving ? "Saving..." : "Save Skills"}
+</button>
+
 </div>
 
               </div>
