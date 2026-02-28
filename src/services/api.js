@@ -49,6 +49,9 @@ export const authAPI = {
 
   updateProfile: (profileData) =>
     api.put('/auth/profile', profileData),
+
+  updateSkills: (skills) =>
+    api.put('/skills', skills),
   
   forgotPassword: (email) =>
     api.post('/password/forgot-password', { email }),
