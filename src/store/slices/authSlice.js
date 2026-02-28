@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authAPI } from '../../services/api'
+import axios from 'axios'
 
 const initialState = {
   user: null,
@@ -64,6 +65,25 @@ export const updateProfile = createAsyncThunk(
     }
   }
 )
+    // skill
+export const updateSkills = createAsyncThunk(
+  "auth/updateSkills",
+  async (skills, { rejectWithValue }) => {
+    try {
+      const res = await authAPI.updateSkills(skills)
+      console.log("payload:", skills)
+      console.log("THUNK RECEIVED:", skills)
+console.log("IS ARRAY:", Array.isArray(skills))
+
+
+      return res.data.skills
+    } catch (err) {
+      console.log("SERVER ERROR:", err.response?.data)
+      return rejectWithValue("Skill update failed")
+    }
+  }
+)
+
 
 const authSlice = createSlice({
   name: 'auth',
@@ -140,6 +160,13 @@ const authSlice = createSlice({
       .addCase(updateProfile.rejected, (state, action) => {
         console.error('Profile update failed:', action.payload)
       })
+
+      // for skills
+
+      .addCase(updateSkills.fulfilled, (state, action) => {
+  state.user.skills = action.payload
+})
+
   },
 })
 
