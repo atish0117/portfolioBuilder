@@ -18,6 +18,8 @@ import adminRoutes from './routes/admin.js'
 import { seedAllData } from './utils/seedData.js'
 import oathuRoutes from './routes/oauth.routes.js'
 import dbConnect from './db/dbConnect.js'
+import skillRoutes from './routes/skill.routes.js'
+import adminIconRoutes from './routes/adminIcon.routes.js'
 dotenv.config()
 
 const app = express()
@@ -55,6 +57,9 @@ app.use('/api/portfolio', portfolioRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/seo', seoRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/admin', adminIconRoutes)
+app.use('/api',skillRoutes)
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() })
