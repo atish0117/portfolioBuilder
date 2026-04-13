@@ -1,20 +1,37 @@
 export const setAuthCookies = (res, tokens) => {
-  res.cookie('accessToken', tokens.token, {
+
+  const isProd = process.env.NODE_ENV === "production"
+
+  const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 15 * 60 * 1000 // 15 min
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/"
+  }
+
+  res.cookie("accessToken", tokens.token, {
+    ...cookieOptions,
+    maxAge: 15 * 60 * 1000
   })
 
-  res.cookie('refreshToken', tokens.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  res.cookie("refreshToken", tokens.refreshToken, {
+    ...cookieOptions,
+    maxAge: 30 * 24 * 60 * 60 * 1000
   })
 }
 
 export const clearAuthCookies = (res) => {
-  res.clearCookie('accessToken')
-  res.clearCookie('refreshToken')
+
+  const isProd = process.env.NODE_ENV === "production"
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/"
+  }
+
+  res.clearCookie("accessToken", cookieOptions)
+  res.clearCookie("refreshToken", cookieOptions)
+
 }
