@@ -1,341 +1,306 @@
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { useDispatch, useSelector } from 'react-redux'
-import { updateProfile } from '../../store/slices/authSlice'
-import toast from 'react-hot-toast'
-import { Palette, Zap, Sparkles, Camera, Leaf } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { updateProfile } from "../../store/slices/authSlice";
+import toast from "react-hot-toast";
+import { Palette, Zap, Sparkles, Camera, Leaf } from "lucide-react";
 import { BiAdjust } from "react-icons/bi";
-// const templates = [
-//   {
-//     id: 'minimal',
-//     name: 'Minimal',
-//     description: 'Clean and simple design focusing on content',
-//     preview: '🎨',
-//     features: ['Clean Layout', 'Typography Focus', 'Fast Loading'],
-//     color: 'from-gray-400 to-gray-600'
-//   },
-//   {
-//     id: 'modern',
-//     name: 'Modern',
-//     description: 'Contemporary design with bold elements',
-//     preview: '✨',
-//     features: ['Bold Typography', 'Gradient Accents', 'Interactive Elements'],
-//     color: 'from-blue-400 to-purple-600'
-//   },
-//   {
-//     id: 'creative',
-//     name: 'Creative',
-//     description: 'Artistic and unique layout for creatives',
-//     preview: '🎭',
-//     features: ['Artistic Layout', 'Custom Animations', 'Portfolio Focus'],
-//     color: 'from-pink-400 to-red-600'
-//   },
-//   {
-//     id: 'professional',
-//     name: 'Professional',
-//     description: 'Corporate-friendly design for business',
-//     preview: '💼',
-//     features: ['Business Ready', 'Formal Layout', 'Corporate Colors'],
-//     color: 'from-indigo-400 to-blue-600'
-//   },
-//   {
-//     id: 'developer',
-//     name: 'Developer',
-//     description: 'Tech-focused design for developers',
-//     preview: '💻',
-//     features: ['Code Snippets', 'Tech Stack Focus', 'Dark Theme'],
-//     color: 'from-green-400 to-teal-600'
-//   },
-//   {
-//     id: 'designer',
-//     name: 'Designer',
-//     description: 'Visual-heavy layout for designers',
-//     preview: '🎨',
-//     features: ['Visual Portfolio', 'Image Gallery', 'Creative Sections'],
-//     color: 'from-purple-400 to-pink-600'
-//   },
-//    {
-//     id: 'minimalist',
-//     name: 'Minimalist',
-//     description: 'Clean, elegant design with subtle animations',
-//     // icon: Palette,
-//     // component: MinimalistTemplate,
-//      features: ['Visual Portfolio', 'Image Gallery', 'Creative Sections'],
-//     preview: Palette,'bg-gradient-to-br from-gray-100 to-white',
-//     color: 'text-gray-600'
-//   },
-//   {
-//     id: 'cyberpunk',
-//     name: 'Neon Cyberpunk',
-//     description: 'Futuristic design with glitch effects and neon colors',
-//     // icon: Zap,
-//     // component: NeonCyberpunkTemplate,
-//      features: ['Visual Portfolio', 'Image Gallery', 'Creative Sections'],
-//     preview: Zap,'bg-gradient-to-br from-purple-900 via-black to-cyan-900',
-//     color: 'text-cyan-400'
-//   },
-//   {
-//     id: 'glassmorphism',
-//     name: 'Glassmorphism',
-//     description: 'Modern glass-like effects with beautiful transparency',
-//     // icon: Sparkles,
-//     // component: GlassmorphismTemplate,
-//      features: ['Visual Portfolio', 'Image Gallery', 'Creative Sections'],
-//     preview: Sparkles,'bg-gradient-to-br from-purple-400 via-pink-500 to-red-500',
-//     color: 'text-white'
-//   },
-//   {
-//     id: 'retro',
-//     name: 'Retro Vintage',
-//     description: 'Nostalgic 70s-80s design with warm colors and playful elements',
-//     // icon: Camera,
-//     // component: RetroVintageTemplate,
-//      features: ['Visual Portfolio', 'Image Gallery', 'Creative Sections'],
-//     preview: Camera,'bg-gradient-to-br from-orange-300 via-yellow-200 to-red-300',
-//     color: 'text-amber-800'
-//   },
-//   {
-//     id: 'nature',
-//     name: 'Nature & Organic',
-//     description: 'Earth-inspired design with natural elements and seasonal themes',
-//     // icon: Leaf,
-//     // component: NatureOrganicTemplate,
-//      features: ['Visual Portfolio', 'Image Gallery', 'Creative Sections'],
-//     preview: Leaf,'bg-gradient-to-br from-green-300 via-blue-200 to-purple-200',
-//     color: 'text-green-700'
-//   }
-// ]
-
-
-
-const templates = [
-  {
-    id: 'minimal',
-    name: 'Minimal',
-    description: 'Clean and simple design focusing on content',
-    preview: '🎨',
-    features: ['Clean Layout', 'Typography Focus', 'Fast Loading'],
-    color: 'from-gray-400 to-gray-600'
-  },
-  {
-    id: 'modern',
-    name: 'Modern',
-    description: 'Contemporary design with bold elements',
-    preview: '✨',
-    features: ['Bold Typography', 'Gradient Accents', 'Interactive Elements'],
-    color: 'from-blue-400 to-purple-600'
-  },
-  {
-    id: 'creative',
-    name: 'Creative',
-    description: 'Artistic and unique layout for creatives',
-    preview: '🎭',
-    features: ['Artistic Layout', 'Custom Animations', 'Portfolio Focus'],
-    color: 'from-pink-400 to-red-600'
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    description: 'Corporate-friendly design for business',
-    preview: '💼',
-    features: ['Business Ready', 'Formal Layout', 'Corporate Colors'],
-    color: 'from-indigo-400 to-blue-600'
-  },
-  {
-    id: 'developer',
-    name: 'Developer',
-    description: 'Tech-focused design for developers',
-    preview: '💻',
-    features: ['Code Snippets', 'Tech Stack Focus', 'Dark Theme'],
-    color: 'from-green-400 to-teal-600'
-  },
-  {
-    id: 'designer',
-    name: 'Designer',
-    description: 'Visual-heavy layout for designers',
-    preview: '🎨',
-    features: ['Visual Portfolio', 'Image Gallery', 'Creative Sections'],
-    color: 'from-purple-400 to-pink-600'
-  },
-  {
-    id: 'minimalist',
-    name: 'Minimalist',
-    description: 'Clean, elegant design with subtle animations',
-    preview: <Palette size={30} />,
-    color: 'text-gray-600 bg-gradient-to-br from-gray-100 to-white',
-    features: ['Clean, elegant design', 'Interactive skill cards', 'Smooth scroll navigation']
-
-  },
-  {
-    id: 'minimalist2',
-    name: 'Minimalist2',
-    description: 'Clean, elegant design with subtle animations',
-    preview: <Palette size={30} />,
-    color: 'text-gray-600 bg-gradient-to-br from-gray-100 to-white',
-    features: ['Visual Portfolio', 'Image Gallery', 'Creative Sections']
-  },
-  {
-    id: 'Cyberpunk',
-    name: 'Neon Cyberpunk',
-    description: 'Futuristic design with glitch effects and neon colors',
-    preview: <Zap size={30} />,
-    color: 'text-cyan-400 bg-gradient-to-br from-purple-900 via-black to-cyan-900',
-    features: ['Futuristic design', 'Terminal-themed interface', 'Retro gaming aesthetics']
-
-  },
-  {
-    id: 'Glassmorphism',
-    name: 'Glassmorphism',
-    description: 'Modern glass-like effects with beautiful transparency',
-    preview: <Sparkles size={30} />,
-    color: 'text-white bg-gradient-to-br from-purple-400 via-pink-500 to-red-500',
-    features: ['Glass-like effects', 'Interactive theme switcher', '3D hover effects']
-
-  },
-  {
-    id: 'Retro',
-    name: 'Retro Vintage',
-    description: 'Nostalgic 70s-80s design with warm colors and playful elements',
-    preview: <Camera size={30} />,
-    color: 'text-amber-800 bg-gradient-to-br from-orange-300 via-yellow-200 to-red-300',
-    features: ['70s–80s nostalgia', 'Retro elements geometric shapes', 'Typography & colors']
-
-  },
-  {
-    id: 'Nature',
-    name: 'Nature & Organic',
-    description: 'Earth-inspired design with natural elements and seasonal themes',
-    preview: <Leaf size={30} />,
-    color: 'text-green-700 bg-gradient-to-br from-green-300 via-blue-200 to-purple-200',
-    features: ['Nature-based theme', 'Organic visuals', 'Natural animations']
-
-  },
-   {
-    id: 'black-white',
-    name: 'Black & White Interactive',
-    description: 'Stunning monochrome design with high interactivity and attractive animations',
-    // icon: Zap,
-    // component: BlackWhiteTemplate,
-    preview: <img src="/black.png" alt="" />,
-    color: 'text-white',
-    features: ['Monochrome elegance', 'Geometric visuals', 'Sophisticated animations']
-
-  },
-// {
-//       id: 'vibrant-purple',
-//     name: 'Vibrant Purple Magic',
-//     description: 'Magical purple theme with enchanting animations and vibrant colors',
-//     // icon: Sparkles,
-//     // component: VibrantPurpleTemplate,
-//     preview: 'bg-gradient-to-br from-purple-900 via-pink-600 to-indigo-600',
-//     color: 'text-purple-400'
-//   },
-
-]
-
-
+import { templateAPI } from "../../services/api";
+import TemplateLoader from "../../components/ui/TemplateLoader";
 
 const TemplateSelector = () => {
-  const dispatch = useDispatch()
-  const { user } = useSelector((state) => state.auth)
-  const [selectedTemplate, setSelectedTemplate] = useState(user?.selectedTemplate || 'minimal')
-  const [saving, setSaving] = useState(false)
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const [selectedTemplate, setSelectedTemplate] = useState(
+    user?.selectedTemplate || "minimal",
+  );
+  const [templates, setTemplates] = useState();
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    const fetchTemplates = async () => {
+      try {
+        const res = await templateAPI.getPublicTemplates();
+        if (mounted) setTemplates(res.data.templates || []);
+      } catch (error) {
+        toast.error("failed to load templates");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchTemplates();
+    return () => (mounted = false);
+  }, []);
 
-  const handleTemplateSelect = async (templateId) => {
-    setSelectedTemplate(templateId)
-    setSaving(true)
+  // Memoized template list (performance boost)
+  const templateList = useMemo(() => templates, [templates]);
+
+  const handleTemplateSelect = async (template) => {
+    // 🚧 Coming soon
+    if (!template.isActive) {
+      toast.error("Template coming soon 🚧");
+      return;
+    }
+
+    // 🔒 Premium lock
+    if (template.isPremium && user?.plan !== "pro") {
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    setSelectedTemplate(template.id);
+    setSaving(true);
 
     try {
-      await dispatch(updateProfile({ selectedTemplate: templateId })).unwrap()
-      toast.success('Template updated successfully!')
+      await dispatch(updateProfile({ selectedTemplate: template.id })).unwrap();
+      toast.success("Template updated successfully!");
     } catch (error) {
-      toast.error('Failed to update template')
-      setSelectedTemplate(user?.selectedTemplate || 'minimal')
+      toast.error("Failed to update template");
+      setSelectedTemplate(user?.selectedTemplate || "minimal");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
+  };
+
+  if (loading) {
+    return <TemplateLoader count={6} />;
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">
           Choose Your Template
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Select a template that best represents your style and profession
+        <p className="text-gray-500 dark:text-gray-400 mt-1">
+          Select a template that matches your style
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates.map((template) => (
-          <motion.div
-            key={template.id}
-            className={`
-              card p-6 cursor-pointer transition-all duration-300 hover:shadow-xl
-              ${selectedTemplate === template.id 
-                ? 'ring-2 ring-primary-500 border-primary-200 dark:border-primary-800' 
-                : 'hover:border-primary-200 dark:hover:border-primary-800'
-              }
-            `}
-            whileHover={{ y: -5 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => handleTemplateSelect(template.id)}
-          >
-            <div className="text-center mb-4">
-              <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${template.color} flex items-center justify-center text-3xl mb-3`}>
-                {template.preview}
+      {/* Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {templateList?.map((template) => {
+          const isPremiumLocked = template.isPremium && user?.plan !== "pro";
+
+          return (
+            <motion.div
+              key={template.id}
+              className={`
+                relative rounded-2xl p-4 border
+                bg-white dark:bg-gray-900
+                border-gray-200 dark:border-gray-700
+                transition-all duration-300
+                flex flex-col min-h-[250px]
+
+                ${
+                  isPremiumLocked || !template.isActive
+                    ? "opacity-60 cursor-not-allowed"
+                    : "cursor-pointer hover:shadow-xl hover:-translate-y-1"
+                }
+
+                ${
+                  selectedTemplate === template.id
+                    ? "ring-2 ring-purple-500"
+                    : ""
+                }
+              `}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => handleTemplateSelect(template)}
+            >
+              <div className={isPremiumLocked ? "blur-sm" : ""}>
+                {/* Image */}
+                <img
+                  src={template.previewImage}
+                  alt={template.name}
+                  loading="lazy"
+                  className="w-full h-40 object-cover rounded-lg mb-3"
+                />
+
+                <motion.div
+                  className="
+                  group relative rounded-2xl p-5 border mb-2
+    bg-white dark:bg-gray-900
+    border-gray-200 dark:border-gray-700
+    transition-all duration-500
+  "
+                  whileHover={{ scale: 1.02 }}
+                >
+                  {/* Content */}
+                  <div className="relative z-10 space-y-3">
+                    {/* Title */}
+                    <h3
+                      className="
+        relative inline-block
+        font-semibold text-lg
+        text-gray-800 dark:text-white
+        transition-all duration-300
+
+        group-hover:text-primary-500
+        group-hover:tracking-wide
+      "
+                    >
+                      {template.name}
+
+                      {/* Animated underline */}
+                      <span
+                        className="
+          absolute left-0 -bottom-1 h-[2px] w-0
+          bg-primary-500
+          transition-all duration-300
+          group-hover:w-full
+        "
+                      />
+                    </h3>
+
+                    {/* Description */}
+                    <p
+                      className="
+        text-sm text-gray-500 dark:text-gray-400
+        line-clamp-2
+        transition-all duration-300
+
+        group-hover:text-gray-700
+        dark:group-hover:text-gray-200
+        group-hover:-translate-y-1
+      "
+                    >
+                      {template.description}
+                    </p>
+                  </div>
+                  {/* Features */}
+                  <div className="space-y-2">
+                    {Array.isArray(template.features) &&
+                      template.features.slice(0, 3).map((f, i) => (
+                        <div
+                          key={f}
+                          className="flex items-center space-x-2 group/item cursor-default
+          transition-all duration-300 hover:translate-x-1"
+                        >
+                          {/* Dot */}
+                          <div
+                            className="
+            w-2 h-2 rounded-full 
+            bg-gray-400 dark:bg-gray-600
+            transition-all duration-300
+            group-hover/item:bg-primary-500 group-hover/item:scale-125
+          "
+                          ></div>
+
+                          {/* Text */}
+                          <span
+                            className="
+            text-sm text-gray-600 dark:text-gray-400
+            transition-all duration-300
+            group-hover/item:text-gray-900 dark:group-hover/item:text-white
+          "
+                          >
+                            {f}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </motion.div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                {template.name}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                {template.description}
-              </p>
-            </div>
 
-            <div className="space-y-2">
-              {template.features.map((feature) => (
-                <div key={feature} className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {feature}
-                  </span>
+              {/* Premium */}
+              {isPremiumLocked && (
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center rounded-2xl">
+                  <span className="text-white text-2xl">🔒</span>
+                  <p className="text-white text-sm">Premium</p>
                 </div>
-              ))}
-            </div>
+              )}
 
-            {selectedTemplate === template.id && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 flex items-center justify-center space-x-2 text-primary-600 dark:text-primary-400"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-sm font-medium">Selected</span>
-              </motion.div>
-            )}
-          </motion.div>
-        ))}
+              {/* Coming Soon */}
+              {!template.isActive && (
+                <span className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
+                  Coming Soon
+                </span>
+              )}
+
+{/* --- Bottom Section with Horizontal Line --- */}
+  <div className="mt-auto p-2  border-t-4  rounded-lg border-purple-600/50 flex items-center justify-between">
+    
+    {/* Selected Status */}
+    <div className="min-h-[20px]">
+      {selectedTemplate === template.id && (
+        <p className="text-green-500 text-sm font-medium flex items-center gap-1">
+          <span>✓</span> Selected
+        </p>
+      )}
+    </div>
+
+    {/* Preview Button */}
+    <button
+      className="
+        text-blue-500 text-sm font-medium 
+        hover:text-blue-400 transition-colors
+        px-3 py-1 rounded-lg bg-white/5
+      "
+      onClick={(e) => {
+        e.stopPropagation();
+        setPreviewTemplate(template);
+      }}
+    >
+      Preview
+    </button>
+  </div>
+            </motion.div>
+          );
+        })}
       </div>
 
+      {/* Saving */}
       {saving && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-4"
-        >
-          <div className="inline-flex items-center space-x-2 text-primary-600 dark:text-primary-400">
-            <motion.div
-              className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        <p className="text-center text-purple-500">Updating template...</p>
+      )}
+
+      {/* Preview Modal */}
+      {previewTemplate && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-5xl h-[90vh] rounded-xl relative">
+            <button
+              className="absolute top-3 right-3 bg-black text-white px-2 py-1 rounded"
+              onClick={() => setPreviewTemplate(null)}
+            >
+              ✕
+            </button>
+
+            <iframe
+              src={`/preview/${previewTemplate.id}`}
+              className="w-full h-full rounded-xl"
             />
-            <span>Updating template...</span>
           </div>
-        </motion.div>
+        </div>
+      )}
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 p-6 rounded-xl text-center max-w-md w-full">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              Upgrade to Pro 🚀
+            </h2>
+
+            <p className="text-gray-500 dark:text-gray-400 mt-2">
+              Unlock premium templates
+            </p>
+
+            <button className="mt-4 bg-purple-600 text-white px-4 py-2 rounded">
+              Upgrade Now
+            </button>
+
+            <button
+              className="block mt-3 text-gray-500"
+              onClick={() => setShowUpgradeModal(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       <motion.div
@@ -358,7 +323,7 @@ const TemplateSelector = () => {
         </ul>
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default TemplateSelector
+export default TemplateSelector;
