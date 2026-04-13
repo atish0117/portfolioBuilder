@@ -2,6 +2,7 @@ import User from '../models/User.js'
 import { buildOAuthState, parseOAuthState } from '../utils/oauthState.utils.js'
 import { generateTokens } from '../utils/jwt.js'
 import { setAuthCookies } from '../utils/cookie.js'
+import crypto from 'crypto'
 // GitHub
 import {
   getGitHubAuthUrl,
@@ -112,6 +113,14 @@ export const oauthCallback = async (req, res) => {
       }
 
       const tokens = generateTokens(user)
+const hashed = crypto
+  .createHash("sha256")
+  .update(tokens.refreshToken)
+  .digest("hex")
+
+user.refreshTokenHash = hashed
+await user.save()
+
       setAuthCookies(res, tokens)
     }
 

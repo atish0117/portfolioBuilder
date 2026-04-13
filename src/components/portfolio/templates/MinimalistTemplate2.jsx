@@ -38,6 +38,8 @@ import TagLineRender from '../../ui/TagLineRender'; // Assuming tagLineRender is
 const MinimalistTemplate2 = ({ user, projects, sectionOrder, visibleSections }) => {
   const [activeSection, setActiveSection] = useState('hero');
 
+  console.log("user template",user)
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [likedProjects, setLikedProjects] = useState(new Set());
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -230,10 +232,10 @@ const MinimalistTemplate2 = ({ user, projects, sectionOrder, visibleSections }) 
                     <div className="text-2xl font-bold text-gray-900">{user.experience?.length || 0}</div>
                     <div className="text-sm text-gray-500">Experience</div>
                   </div>
-                  <div className="text-center">
+                  {/* <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">{user.skills?.length || 0}</div>
                     <div className="text-sm text-gray-500">Skills</div>
-                  </div>
+                  </div> */}
                 </motion.div>
 
                 {/* Scroll indicator */}
@@ -257,91 +259,91 @@ const MinimalistTemplate2 = ({ user, projects, sectionOrder, visibleSections }) 
           </section>
         );
 
-      case 'skills':
-        return user.skills && user.skills.length > 0 ? (
-          <section id="skills" className="py-20 bg-gray-50 relative overflow-hidden">
-            {/* Background pattern */}
-            <div className="absolute inset-0 opacity-5">
-              <div className="absolute inset-0" style={{
-                backgroundImage: `radial-gradient(circle at 1px 1px, rgba(0,0,0,0.15) 1px, transparent 0)`,
-                backgroundSize: '20px 20px'
-              }} />
-            </div>
+      // case 'skills':
+      //   return user.skills && user.skills.length > 0 ? (
+      //     <section id="skills" className="py-20 bg-gray-50 relative overflow-hidden">
+      //       {/* Background pattern */}
+      //       <div className="absolute inset-0 opacity-5">
+      //         <div className="absolute inset-0" style={{
+      //           backgroundImage: `radial-gradient(circle at 1px 1px, rgba(0,0,0,0.15) 1px, transparent 0)`,
+      //           backgroundSize: '20px 20px'
+      //         }} />
+      //       </div>
 
-            <div className="relative max-w-6xl mx-auto px-8">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="text-center mb-16"
-              >
-                <h2 className="text-4xl font-light text-gray-900 mb-4">Skills & Expertise</h2>
-                <p className="text-gray-600 max-w-2xl mx-auto">
-                  A comprehensive overview of my technical skills and professional competencies
-                </p>
-              </motion.div>
+      //       <div className="relative max-w-6xl mx-auto px-8">
+      //         <motion.div
+      //           initial={{ opacity: 0, y: 30 }}
+      //           whileInView={{ opacity: 1, y: 0 }}
+      //           transition={{ duration: 0.8 }}
+      //           className="text-center mb-16"
+      //         >
+      //           <h2 className="text-4xl font-light text-gray-900 mb-4">Skills & Expertise</h2>
+      //           <p className="text-gray-600 max-w-2xl mx-auto">
+      //             A comprehensive overview of my technical skills and professional competencies
+      //           </p>
+      //         </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {user.skills.map((skill, index) => (
-                  <motion.div
-                    key={skill}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    whileHover={{ y: -5, scale: 1.02 }}
-                    onViewportEnter={() => setSkillsInView(true)}
-                    className="group p-6 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
-                  >
-                    {/* Skill icon */}
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                        <Code className="w-6 h-6 text-gray-600" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-800">{skill}</h3>
-                    </div>
+      //         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      //           {user.skills.map((skill, index) => (
+      //             <motion.div
+      //               key={skill}
+      //               initial={{ opacity: 0, y: 20 }}
+      //               whileInView={{ opacity: 1, y: 0 }}
+      //               transition={{ duration: 0.6, delay: index * 0.1 }}
+      //               whileHover={{ y: -5, scale: 1.02 }}
+      //               onViewportEnter={() => setSkillsInView(true)}
+      //               className="group p-6 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
+      //             >
+      //               {/* Skill icon */}
+      //               <div className="flex items-center mb-4">
+      //                 <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+      //                   <Code className="w-6 h-6 text-gray-600" />
+      //                 </div>
+      //                 <h3 className="text-lg font-medium text-gray-800">{skill}</h3>
+      //               </div>
 
-                    {/* Skill level indicator */}
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm text-gray-500 mb-2">
-                        <span>Proficiency</span>
-                        <span>{Math.floor(Math.random() * 20) + 80}%</span>
-                      </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${Math.floor(Math.random() * 20) + 80}%` }}
-                          transition={{ duration: 1, delay: index * 0.1 }}
-                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
-                        />
-                      </div>
-                    </div>
+      //               {/* Skill level indicator */}
+      //               <div className="mb-4">
+      //                 <div className="flex justify-between text-sm text-gray-500 mb-2">
+      //                   <span>Proficiency</span>
+      //                   <span>{Math.floor(Math.random() * 20) + 80}%</span>
+      //                 </div>
+      //                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      //                   <motion.div
+      //                     initial={{ width: 0 }}
+      //                     whileInView={{ width: `${Math.floor(Math.random() * 20) + 80}%` }}
+      //                     transition={{ duration: 1, delay: index * 0.1 }}
+      //                     className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+      //                   />
+      //                 </div>
+      //               </div>
 
-                    {/* Years of experience */}
-                    <div className="text-sm text-gray-500">
-                      {Math.floor(Math.random() * 5) + 2} years experience
-                    </div>
+      //               {/* Years of experience */}
+      //               <div className="text-sm text-gray-500">
+      //                 {Math.floor(Math.random() * 5) + 2} years experience
+      //               </div>
 
-                    {/* Hover effect overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
-                  </motion.div>
-                ))}
-              </div>
+      //               {/* Hover effect overlay */}
+      //               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+      //             </motion.div>
+      //           ))}
+      //         </div>
 
-              {/* Skills summary */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className="mt-16 text-center"
-              >
-                <div className="inline-flex items-center px-6 py-3 bg-white rounded-full shadow-sm border border-gray-100">
-                  <Target className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">Always learning and growing</span>
-                </div>
-              </motion.div>
-            </div>
-          </section>
-        ) : null;
+      //         {/* Skills summary */}
+      //         <motion.div
+      //           initial={{ opacity: 0, y: 30 }}
+      //           whileInView={{ opacity: 1, y: 0 }}
+      //           transition={{ duration: 0.8, delay: 0.5 }}
+      //           className="mt-16 text-center"
+      //         >
+      //           <div className="inline-flex items-center px-6 py-3 bg-white rounded-full shadow-sm border border-gray-100">
+      //             <Target className="w-5 h-5 text-green-500 mr-2" />
+      //             <span className="text-gray-700">Always learning and growing</span>
+      //           </div>
+      //         </motion.div>
+      //       </div>
+      //     </section>
+      //   ) : null;
 
       case 'experience':
         return user.experience && user.experience.length > 0 ? (

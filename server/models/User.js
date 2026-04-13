@@ -7,6 +7,12 @@ const userSchema = new mongoose.Schema(
     username: { type: String, required: true, unique: true, trim: true, index: true },
     email: { type: String, required: true, unique: true },
     password: { type: String }, // make optional for OAuth
+
+      // store hash refresh token inside the database
+    refreshTokenHash: {
+  type: String,
+  default: null
+},
  // ----------------- Social Authentication -----------------
     socialAuth: {
       github: {
@@ -123,7 +129,7 @@ connections: {
       level:{
         type:String,
         enum:['beginner', 'intermediate','advanced','expert'],
-        default:'intermedial'
+        default:'intermediate'
       },
       yearsOfExperience:{
         type:Number,
@@ -251,7 +257,7 @@ connections: {
         enum: ['summary', 'summary_large_image', 'app', 'player'],
         default: 'summary_large_image' 
       },
-       twitterTitle: { type: String, maxlength: 70 },
+      twitterTitle: { type: String, maxlength: 70 },
       twitterDescription: { type: String, maxlength: 200 },
       twitterImage: { type: String },
       canonicalUrl: { type: String },
@@ -260,7 +266,7 @@ connections: {
         enum: ['index,follow', 'noindex,follow', 'index,nofollow', 'noindex,nofollow'],
         default: 'index,follow' 
       },
-         structuredData: {
+        structuredData: {
         type: { type: String, default: 'Person' },
         jobTitle: String,
         worksFor: String,

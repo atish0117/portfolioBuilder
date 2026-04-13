@@ -21,23 +21,30 @@ const AdminDashboard = () => {
   console.log('user in admin dashboard:', user)
 
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [user])
+useEffect(() => {
+  if (!user) return
+  loadDashboardData()
+}, [user])
 
   const loadDashboardData = async () => {
-    if (user?.role !== 'admin') {
-      toast.error('Access denied. Admin privileges required.')
+    if (!user) return
+    if (user?.role?.toLowerCase() !== 'admin') {
+      // toast.error('Access denied. Admin privileges required.')
       setError('Access denied. Admin privileges required.')
       setLoading(false)
       return
     }
 
     try {
+      setLoading(true)
+    setError(null)
+
       const response = await adminAPI.getDashboard()
+      console.log("admin page data",response.data)
       setDashboardData(response.data)
+
     } catch (error) {
-      console.error('Dashboard load error:', error)
+      console.error('Dashboard load error:-', error)
       toast.error('Failed to load dashboard data')
       setError('Failed to load dashboard data')
     } finally {
@@ -52,6 +59,14 @@ const AdminDashboard = () => {
     { id: 'templates', label: 'Templates', icon: '🎨', description: 'Manage portfolio templates' },
     { id: 'settings', label: 'System Settings', icon: '⚙️', description: 'Configure system settings' }
   ]
+
+  if (!user) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p>Loading user...</p>
+    </div>
+  )
+}
 
   if ( error || user?.role !== 'admin') {
     return (

@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 dotenv.config()
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key'
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1d'
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret'
+const JWT_SECRET = process.env.JWT_SECRET || 'atishProjectSecret'
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m'
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'atishProjectRefreshSecret'
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '30d'
 
 
@@ -12,7 +12,7 @@ export const generateTokens = (user) => {
   const payload = {
     userId: user._id,
     email: user.email,
-    iat: Math.floor(Date.now() / 1000)
+    role: user.role,
   }
 
   const accessToken = jwt.sign(payload, JWT_SECRET, {
@@ -66,10 +66,19 @@ export const verifyRefreshToken = (token) => {
       audience: 'portfolio-users'
     })
   } catch (error) {
-    throw new Error('INVALID_REFRESH_TOKEN')
+    if (error.name === 'TokenExpiredError') {
+      throw new Error('REFRESH_TOKEN_EXPIRED')
+    }
+
+    if (error.name === 'JsonWebTokenError') {
+      throw new Error('INVALID_REFRESH_TOKEN')
+    }
+
+    throw new Error('REFRESH_TOKEN_VERIFICATION_FAILED')
   }
 }
 
+// currently this function not in working because direct use this function on another page 
 export const refreshAccessToken = async (refreshToken) => {
   try {
     const decoded = verifyRefreshToken(refreshToken)

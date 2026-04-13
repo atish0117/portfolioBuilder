@@ -3,16 +3,14 @@ import User from '../models/User.js'
 
 export const adminAuth = async (req, res, next) => {
   try {
-    const authHeader = req.header('Authorization')
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        message: 'Access denied. No token provided.',
-        code: 'NO_TOKEN'
-      })
-    }
+    const token = req.cookies?.accessToken
 
-    const token = authHeader.substring(7)
+if (!token) {
+  return res.status(401).json({
+    message: 'Access denied. No token provided.',
+    code: 'NO_TOKEN'
+  })
+}
     
     try {
       const decoded = verifyAccessToken(token)
@@ -74,16 +72,14 @@ export const adminAuth = async (req, res, next) => {
 
 export const moderatorAuth = async (req, res, next) => {
   try {
-    const authHeader = req.header('Authorization')
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ 
-        message: 'Access denied. No token provided.',
-        code: 'NO_TOKEN'
-      })
-    }
+   const token = req.cookies?.accessToken
 
-    const token = authHeader.substring(7)
+if (!token) {
+  return res.status(401).json({
+    message: 'Access denied. No token provided.',
+    code: 'NO_TOKEN'
+  })
+}
     
     try {
       const decoded = verifyAccessToken(token)

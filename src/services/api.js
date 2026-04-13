@@ -3,35 +3,69 @@ import axios from 'axios'
 const API_BASE_URL =
   import.meta.env.VITE_BACKEND_API_URL
 
-console.log(import.meta.env.BACKEND_API_URL)
+console.log(import.meta.env.VITE_BACKEND_API_URL)
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true 
 })
 
 // Add auth token to requests
-api.interceptors.response.use(
-  (res) => res,
-  (error) => {
-    const status = error.response?.status
-    const url = error.config?.url || ''
+let isRefreshing = false
+let failedQueue = []
 
-    // ✅ Ignore auth check failure
-    if (status === 401 && url.includes('/auth/profile')) {
+const processQueue = (error = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error)
+    } else {
+      resolve()
+    }
+  })
+  failedQueue = []
+}
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config
+    const status = error.response?.status
+    const url = originalRequest?.url || ''
+
+    // login/register/refresh par refresh logic mat chalao
+    if (
+      url.includes('/auth/login') ||
+      url.includes('/auth/register') ||
+      url.includes('/auth/refresh')
+    ) {
       return Promise.reject(error)
     }
 
-    // 🔐 Real session expiry (protected routes)
-    if (status === 401) {
-      console.warn('Session expired')
-      // optional:
-      // window.location.href = '/login'
+    if (status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        }).then(() => api(originalRequest))
+      }
+
+      isRefreshing = true
+
+      try {
+        await api.post('/auth/refresh')
+        processQueue()
+        return api(originalRequest)
+      } catch (refreshError) {
+        processQueue(refreshError)
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
+      }
     }
 
     return Promise.reject(error)
   }
 )
-
 
 
 
@@ -78,6 +112,21 @@ export const portfolioAPI = {
     api.put('/portfolio/section-visibility', { section, visible }),
 }
 
+/* ================= FILE UPLOAD ================= */
+
+export const uploadAPI = {
+  uploadFile: (file, type) => {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    return api.post(`/upload/${type}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    })
+  }
+}
+
 // Projects API
 export const projectsAPI = {
   getProjects: () => api.get('/projects'),
@@ -107,6 +156,11 @@ export const seoAPI = {
   
   getSeoPreview: (username) =>
     api.get(`/seo/preview/${username}`),
+}
+
+// public template 
+export const templateAPI = {
+  getPublicTemplates: () => api.get('/templates/public')
 }
 
 // Admin API

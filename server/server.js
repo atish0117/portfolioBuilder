@@ -20,6 +20,8 @@ import oathuRoutes from './routes/oauth.routes.js'
 import dbConnect from './db/dbConnect.js'
 import skillRoutes from './routes/skill.routes.js'
 import adminIconRoutes from './routes/adminIcon.routes.js'
+import templateRoutes from './routes/template.routes.js'
+import uploadRoutes from './routes/upload.routes.js'
 dotenv.config()
 
 const app = express()
@@ -59,7 +61,8 @@ app.use('/api/seo', seoRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/admin', adminIconRoutes)
 app.use('/api',skillRoutes)
-
+app.use('/api', templateRoutes)
+app.use('/api',uploadRoutes)
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() })
