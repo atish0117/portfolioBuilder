@@ -397,7 +397,7 @@ import {
   loginUser,
   getProfile,
   updateProfile,
-  refreshToken,
+  refreshTokenAndRotation,
   logoutUser
 } from "../controller/auth.controller.js"
 import { auth } from '../middleware/auth.js'
@@ -436,12 +436,7 @@ router.get('/profile', auth, getProfile)
 router.put('/profile', auth, updateProfile)
 
 // Refresh token
-router.post(
-  '/refresh',
-  [body('refreshToken').notEmpty().withMessage('Refresh token required')],
-  validateRequest,
-  refreshToken
-)
+router.post('/refresh',refreshTokenAndRotation)
 
 
 export default router
