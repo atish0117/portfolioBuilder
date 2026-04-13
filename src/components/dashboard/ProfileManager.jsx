@@ -365,17 +365,29 @@ const handleSaveSkills = async () => {
   }
 
   const handleFileUpload = async (fileUrl, type) => {
-    try {
-      const updateData = type === 'image'
-        ? { profileImgUrl: fileUrl }
-        : { resumeUrl: fileUrl }
-
-      await dispatch(updateProfile(updateData)).unwrap()
-      toast.success(`${type === 'image' ? 'Profile image' : 'Resume'} updated successfully!`)
-    } catch (error) {
-      toast.error(error || 'Failed to update file')
+  try {
+    const typeMap = {
+      image: 'profileImgUrl',
+      resume: 'resumeUrl'
     }
+
+    const field = typeMap[type]
+    if (!field) return
+
+    await dispatch(updateProfile({ [field]: fileUrl })).unwrap()
+
+    toast.success(
+      `${type === 'image' ? 'Profile image' : 'Resume'} updated successfully!`
+    )
+  } catch (error) {
+    console.error(error)
+    toast.error(
+      error?.response?.data?.message ||
+      error?.message ||
+      'Failed to update file'
+    )
   }
+}
 
   const sections = [
     { id: 'basic', label: 'Basic Info', icon: '👤' },
@@ -385,6 +397,8 @@ const handleSaveSkills = async () => {
 
     { id: 'files', label: 'Files', icon: '📁' },
   ]
+
+  console.log('user resume url',user?.resumeUrl)
 
   return (
     <div className="space-y-6">
