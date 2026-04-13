@@ -247,25 +247,37 @@ const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!formData.email || !formData.password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+  if (!formData.email || !formData.password) {
+    toast.error('Please fill in all fields');
+    return;
+  }
+  try {
+    const res = await dispatch(login(formData)).unwrap();
 
-    try {
-      await dispatch(login(formData)).unwrap();
-      toast.success('Login successful!');
-      navigate('/dashboard')
-    } catch (err) {
-      toast.error(err || 'Login failed');
+    console.log('login response:', res);
+
+const loggedInUser =
+  res?.user ||
+  res?.data?.user ||
+  res?.data ||
+  null;
+
+console.log('loggedInUser:', loggedInUser);
+console.log('loggedInUser role:', loggedInUser?.role);
+
+toast.success('Login successful!');
+
+    if (loggedInUser?.role?.toLowerCase() === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
     }
-  };
-//  const handleSocialLogin = (provider) => {
-//     window.location.href = `/api/oauth/${provider}?returnUrl=/dashboard` 
-//     console.log(`after login Initiating ${provider} OAuth`)
-//    }
+  } catch (err) {
+    toast.error(err || 'Login failed');
+  }
+};
 
     const handleSocialLogin = (provider) => {
   if (provider === 'apple') {
