@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
+import multer from "multer";
 
 // Import routes
 import authRoutes from './routes/auth.routes.js'
@@ -52,7 +53,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 // Routes
 app.use('/api/auth', authRoutes)
 // app.use('/api/auth', socialAuthRoutes)
-app.use('/api/auth',oathuRoutes)
+app.use('/api/auth', oathuRoutes)
 app.use('/api/integrations', integrationsRoutes)
 app.use('/api/password', passwordRoutes)
 app.use('/api/portfolio', portfolioRoutes)
@@ -60,9 +61,45 @@ app.use('/api/projects', projectRoutes)
 app.use('/api/seo', seoRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/admin', adminIconRoutes)
-app.use('/api',skillRoutes)
+app.use('/api', skillRoutes)
 app.use('/api', templateRoutes)
-app.use('/api',uploadRoutes)
+app.use('/api', uploadRoutes)
+
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("Global Error:", err);
+
+  if (err instanceof multer.MulterError) {
+    const messages = {
+      LIMIT_FILE_SIZE: "File size must not exceed 5 MB",
+      LIMIT_FILE_COUNT: "Only one file can be uploaded at a time",
+      LIMIT_UNEXPECTED_FILE: "Invalid file field or file type",
+    };
+
+    return res.status(400).json({
+      success: false,
+      message: messages[err.code] || err.message,
+    });
+  }
+
+  if (
+    err.message ===
+    "Only JPG, JPEG, PNG, WebP and PDF files are allowed"
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: "Internal server error",
+  });
+});
+
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() })
@@ -70,7 +107,7 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  res.status(500).json({ 
+  res.status(500).json({
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : {}
   })
@@ -90,11 +127,11 @@ app.use('*', (req, res) => {
 // .then(() => console.log('MongoDB connected'))
 // .then(() => seedAllData())
 // .catch(err => console.error('MongoDB connection error:', err))
-dbConnect().then(()=>{
-app.listen(PORT ,()=>{
-  console.log(`server running on port ${PORT}`)
-})
-}).catch(()=>{
+dbConnect().then(() => {
+  app.listen(PORT, () => {
+    console.log(`server running on port ${PORT}`)
+  })
+}).catch(() => {
   console.log("mongoDB connection failed ", error)
 })
 // app.listen(PORT, () => {
