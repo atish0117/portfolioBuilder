@@ -338,25 +338,52 @@ export const refreshTokenAndRotation = async (req, res) => {
 
 //  LOGOUT 
 export const logoutUser = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
 
-  const refreshToken = req.cookies?.refreshToken
+    if (refreshToken) {
+      try {
+        // Verify refresh token
+        const decoded = verifyRefreshToken(refreshToken);
 
-  if (refreshToken) {
+        // Hash refresh token
+        const hashed = crypto
+          .createHash("sha256")
+          .update(refreshToken)
+          .digest("hex");
 
-    const decoded = verifyRefreshToken(refreshToken)
+        // Invalidate only the matching session token
+        await User.findOneAndUpdate(
+          {
+            _id: decoded.userId,
+            refreshTokenHash: hashed,
+          },
+          {
+            $set: {
+              refreshTokenHash: null,
+            },
+          }
+        );
 
-    const user = await User.findById(decoded.userId)
-
-    if (user) {
-      user.refreshTokenHash = null
-      await user.save()
+      } catch (tokenError) {
+        // Invalid or expired token
+        // Continue to clear browser cookies
+        console.log("Logout token verification failed");
+      }
     }
 
+  } catch (error) {
+    console.error("Logout error:", error);
+
+  } finally {
+    // Always clear authentication cookies
+    clearAuthCookies(res);
   }
 
-  clearAuthCookies(res)
-
-  res.json({ message: "Logged out successfully" })
-}
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+};
 
 

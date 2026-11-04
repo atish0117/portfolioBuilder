@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 const projectSchema = new mongoose.Schema(
@@ -6,27 +7,75 @@ const projectSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
-    title: { type: String, required: true },
-    description: { type: String },
-    techStack: [String],
-    githubLink: String,
-    liveLink: String,
-    imageUrl: String, // single/primary image URL
+
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      default: "",
+    },
+
+    techStack: {
+      type: [String],
+      default: [],
+    },
+
+    githubLink: {
+      type: String,
+      default: "",
+    },
+
+    liveLink: {
+      type: String,
+      default: "",
+    },
+
+    imageUrl: {
+      type: String,
+      default: "",
+    },
+
     category: {
       type: String,
-      enum: ['web', 'mobile', 'design', 'backend', 'fullstack', 'other'],
-      default: 'other'
+      enum: ["web", "mobile", "design", "backend", "fullstack", "other"],
+      default: "other",
     },
+
     status: {
       type: String,
-      enum: ['draft', 'published', 'featured'],
-      default: 'published'
+      enum: ["draft", "published", "featured"],
+      default: "published",
+      index: true,
     },
-    startDate: String,
-    endDate: String,
+
+    startDate: {
+      type: String,
+      default: "",
+    },
+
+    endDate: {
+      type: String,
+      default: "",
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-export default mongoose.model("Project", projectSchema);
+// Optimize public portfolio project queries
+projectSchema.index({
+  userId: 1,
+  status: 1,
+  createdAt: -1,
+});
+
+const Project = mongoose.model("Project", projectSchema);
+
+export default Project;

@@ -138,7 +138,7 @@ export const getUsers = async (req, res) => {
           Math.round(
             (completionFields.filter(Boolean).length /
               completionFields.length) *
-              100
+            100
           ) || 0;
 
         return {
