@@ -16,8 +16,9 @@ export const uploadProfileImage = async (req, res) => {
     fs.unlinkSync(req.file.path)
 
     res.json({
-      success: true,
-      url: result.secure_url
+    success: true,
+    url: result.secure_url,
+    public_id: result.public_id 
     })
   } catch (error) {
     console.error(error)
@@ -25,7 +26,7 @@ export const uploadProfileImage = async (req, res) => {
   }
 }
 
-// 🔥 RESUME UPLOAD (PDF)
+// RESUME UPLOAD (PDF)
 export const uploadResume = async (req, res) => {
   try {
     if (!req.file) {
@@ -33,16 +34,17 @@ export const uploadResume = async (req, res) => {
     }
 
     const result = await cloudinary.uploader.upload(req.file.path, {
-      resource_type: "raw", // 🔥 IMPORTANT for PDF
+      resource_type: "raw", 
       folder: "resumes",
-      format: "pdf" 
+      format: "pdf"
     })
 
     fs.unlinkSync(req.file.path)
 
     res.json({
       success: true,
-      url: result.secure_url
+      url: result.secure_url,
+      public_id: result.public_id 
     })
   } catch (error) {
     console.error(error)
