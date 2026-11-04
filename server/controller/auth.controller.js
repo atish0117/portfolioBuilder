@@ -2,121 +2,198 @@ import bcrypt from 'bcryptjs'
 import { validationResult } from 'express-validator'
 import User from '../models/User.js'
 import { generateTokens, verifyRefreshToken } from '../utils/jwt.js'
-import {clearAuthCookies} from '../utils/cookie.js'
+import { clearAuthCookies } from '../utils/cookie.js'
 import { setAuthCookies } from '../utils/cookie.js'
 import crypto from 'crypto'
 
+
+// Safe User DTO for authentication responses
+const buildAuthUserDTO = (user) => {
+  return {
+    id: user._id,
+    fullName: user.fullName,
+    username: user.username,
+    email: user.email,
+    profileImgUrl: user.profileImgUrl,
+    authProvider: user.authProvider,
+  };
+};
+
 //  REGISTER USER
+
 export const registerUser = async (req, res) => {
   try {
-    const errors = validationResult(req)
+    const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
-      return res.status(401).json({ message: errors.array()[0].msg })
+      return res.status(400).json({
+        success: false,
+        message: errors.array()[0].msg,
+      });
     }
 
     const { fullName, email, password } = req.body;
 
-    // Check if user exists
-    const existingUser = await User.findOne({ email })
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+
     if (existingUser) {
-      return res.status(409).json({ message: 'User already exists' })
+      return res.status(409).json({
+        success: false,
+        message: "User already exists",
+      });
     }
 
     // Hash password
-        const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
     const user = await User.create({
       fullName,
       email,
-      password: hashedPassword
-    })
-        // Generate JWT tokens
-    const tokens = generateTokens(user)
+      password: hashedPassword,
+    });
 
-      const refreshTokenHash = crypto
-  .createHash("sha256")
-  .update(tokens.refreshToken)
-  .digest("hex")
+    // Generate JWT tokens
+    const tokens = generateTokens(user);
 
-user.refreshTokenHash = refreshTokenHash
-await user.save()
+    // Hash refresh token before storing
+    const refreshTokenHash = crypto
+      .createHash("sha256")
+      .update(tokens.refreshToken)
+      .digest("hex");
 
-      setAuthCookies(res, tokens)
-      res.status(201)
-      .json({
-        success:true,
-        message: 'User registered successfully',
-        user
-      })
+    user.refreshTokenHash = refreshTokenHash;
+    await user.save();
+
+    // Set authentication cookies
+    setAuthCookies(res, tokens);
+
+    // Create safe User DTO
+    const safeUser = buildAuthUserDTO(user);
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      user: safeUser,
+    });
+
   } catch (error) {
-    console.error('Register error:', error)
-    res.status(500).json({ success:false,message: 'Server error during registration , Registration failed,' })
+    console.error("Register error:", error);
+
+    // Handle duplicate email/username race condition
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error during registration , Registration failed",
+    });
   }
-}
+};
 
 //  LOGIN 
+
 export const loginUser = async (req, res) => {
   try {
-    const errors = validationResult(req)
+    const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
-      return res.status(400).json({success:false, message: errors.array()[0].msg })
+      return res.status(400).json({
+        success: false,
+        message: errors.array()[0].msg,
+      });
     }
 
-    const { email, password } = req.body
+    const { email, password } = req.body;
 
-    // Check if user exists
-    const user = await User.findOne({ email })
+    // Explicitly select password because schema has select: false
+    const user = await User.findOne({ email }).select("+password");
+
     if (!user) {
-      return res.status(404).json({success:false, message: 'Invalid email or password' })
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
     }
 
-    // Check if user has a password (not OAuth-only account)
+    // Check account status
+    if (user.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is not active",
+      });
+    }
+
+    // Check OAuth-only account
     if (!user.password) {
       return res.status(400).json({
-        message: 'Use social login',
-        authProvider: user.authProvider
-      })
+        success: false,
+        message: "Please use social login",
+        authProvider: user.authProvider,
+      });
     }
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password)
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid email or password' })
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
     }
 
-    const tokens = generateTokens(user)
+    // Generate JWT tokens
+    const tokens = generateTokens(user);
 
+    // Hash refresh token
     const refreshTokenHash = crypto
-  .createHash("sha256")
-  .update(tokens.refreshToken)
-  .digest("hex")
+      .createHash("sha256")
+      .update(tokens.refreshToken)
+      .digest("hex");
 
-user.refreshTokenHash = refreshTokenHash
-await user.save()
+    user.refreshTokenHash = refreshTokenHash;
+    user.lastLoginAt = new Date();
+    user.loginCount = (user.loginCount || 0) + 1;
 
-          setAuthCookies(res,tokens)
-    res.status(200)
-      .json({
-        success:true,
-        message: 'Login successful',
-        user
-      })
+    await user.save();
+
+    // Set authentication cookies
+    setAuthCookies(res, tokens);
+
+    // Create safe User DTO
+    const safeUser = buildAuthUserDTO(user);
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: safeUser,
+    });
+
   } catch (error) {
-    console.error('Login error:', error)
-    res.status(500).json({ message: 'Server error during login , Login failed' })
+    console.error("Login error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: " Server error during login , Login failed",
+    });
   }
-}
+};
 
 //  GET PROFILE 
 export const getProfile = async (req, res) => {
   try {
-    const user =await User.findById(req.user._id)
+    const user = await User.findById(req.user._id)
 
     res.status(200).json({
-      success:true,
-      user:user.toObject()
+      success: true,
+      user: user.toObject()
     })
   } catch (error) {
     console.error('Get profile error:', error)
@@ -150,8 +227,8 @@ export const updateProfile = async (req, res) => {
     )
 
     res.status(200).json({
-      success:true,
-      user:userDoc.toObject()
+      success: true,
+      user: userDoc.toObject()
     })
   } catch (error) {
     console.error('Update profile error:', error)
@@ -159,48 +236,106 @@ export const updateProfile = async (req, res) => {
   }
 }
 
-//  REFRESH TOKEN  and ROTATION refresh Token
+
+// REFRESH TOKEN + ATOMIC ROTATION
 export const refreshTokenAndRotation = async (req, res) => {
   try {
-    const refreshToken = req.cookies?.refreshToken
+    const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
-      return res.status(401).json({ message: "No refresh token" })
+      return res.status(401).json({
+        success: false,
+        message: "No refresh token",
+      });
     }
 
-    const decoded = verifyRefreshToken(refreshToken)
+    // 1. Verify refresh JWT
+    const decoded = verifyRefreshToken(refreshToken);
 
-    const user = await User.findById(decoded.userId).select("-password")
-    req.user = user
+    // 2. Find user
+    const user = await User.findById(decoded.userId);
+
     if (!user) {
-      return res.status(401).json({ message: "User not found" })
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
     }
-    const hashed = crypto
+
+    if (user.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        message: "Account is not active",
+      });
+    }
+
+    // 3. Hash old refresh token
+    const oldHash = crypto
       .createHash("sha256")
       .update(refreshToken)
-      .digest("hex")
+      .digest("hex");
 
-    if (user.refreshTokenHash !== hashed) {
-      return res.status(401).json({ message: "Invalid refresh token" })
+    // 4. Verify old token hash
+    if (user.refreshTokenHash !== oldHash) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or already used refresh token",
+      });
     }
 
-    const tokens = generateTokens(user)
+    // 5. Generate new tokens
+    const tokens = generateTokens(user);
 
+    // 6. Hash new refresh token
     const newHash = crypto
       .createHash("sha256")
       .update(tokens.refreshToken)
-      .digest("hex")
+      .digest("hex");
 
-    user.refreshTokenHash = newHash
-    await user.save()
+    // 7. Atomic compare-and-swap
+    // Update only if the old hash is still stored in DB
+    const updatedUser = await User.findOneAndUpdate(
+      {
+        _id: user._id,
+        refreshTokenHash: oldHash,
+        status: "active",
+      },
+      {
+        $set: {
+          refreshTokenHash: newHash,
+        },
+      },
+      {
+        new: true,
+      }
+    );
 
-    setAuthCookies(res, tokens)
+    // Another request may have rotated the token first
+    if (!updatedUser) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token already used",
+      });
+    }
 
-    res.json({ message: "Token refreshed" })
+    // 8. Set cookies only after successful atomic update
+    setAuthCookies(res, tokens);
+
+    return res.status(200).json({
+      success: true,
+      message: "Token refreshed successfully",
+    });
+
   } catch (error) {
-    res.status(401).json({ message: "Refresh failed" })
+    console.error("Refresh token error:", error);
+
+    return res.status(401).json({
+      success: false,
+      message: "Refresh failed",
+    });
   }
-}
+};
+
 //  LOGOUT 
 export const logoutUser = async (req, res) => {
 

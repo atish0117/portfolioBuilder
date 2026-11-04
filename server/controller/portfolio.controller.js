@@ -4,24 +4,98 @@ import Project from '../models/Project.js'
 // GET public portfolio
 export const getPublicPortfolio = async (req, res) => {
   try {
-    const { username } = req.params
+    const { username } = req.params;
 
-    const userDoc = await User.findOne({ username })
-    if (!userDoc) {
-      return res.status(404).json({ message: 'Portfolio not found' })
+    // 1. Fetch only public User fields
+    const user = await User.findOne({
+      username,
+      status: "active",
+    })
+      .select([
+        "fullName",
+        "username",
+        "title",
+        "resumeUrl",
+        "phoneNumber",
+        "tagLine",
+        "profileImgUrl",
+        "intro",
+        "location",
+        "socialLinks",
+        "skills",
+        "aboutSections",
+        "languages",
+        "preferredWorkType",
+        "availability",
+        "workExperience",
+        "experienceDetails",
+        "education",
+        "sectionOrder",
+        "visibleSections",
+        "testimonials",
+        "certifications",
+        "selectedTemplate",
+
+        // Only public SEO fields
+        "seoData.metaTitle",
+        "seoData.metaDescription",
+        "seoData.keywords",
+        "seoData.ogTitle",
+        "seoData.ogDescription",
+        "seoData.ogImage",
+        "seoData.twitterCard",
+        "seoData.twitterTitle",
+        "seoData.twitterDescription",
+        "seoData.twitterImage",
+        "seoData.canonicalUrl",
+        "seoData.structuredData",
+      ].join(" "))
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Portfolio not found",
+      });
     }
 
-    const projects = await Project.find({ userId: userDoc._id })
-    const user =userDoc.toObject()
-    res.status(200).json({
-      user,
-      projects
+    // 2. Fetch only public projects
+    const projects = await Project.find({
+      userId: user._id,
+      status: { $in: ["published", "featured"] },
     })
+      .select([
+        "title",
+        "description",
+        "techStack",
+        "githubLink",
+        "liveLink",
+        "imageUrl",
+        "category",
+        "status",
+        "startDate",
+        "endDate",
+        "createdAt",
+      ].join(" "))
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // 3. Return public portfolio data
+    return res.status(200).json({
+      success: true,
+      user,
+      projects,
+    });
+
   } catch (error) {
-    console.error('Get portfolio error:', error)
-    res.status(500).json({ message: 'Server error' })
+    console.error("Get public portfolio error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch portfolio",
+    });
   }
-}
+};
 
 // UPDATE section order
 export const updateSectionOrder = async (req, res) => {
@@ -121,7 +195,7 @@ export const updateProfile = async (req, res) => {
 
     res.status(200).json({
       message: 'Profile updated successfully',
-      user:userDoc.toObject()
+      user: userDoc.toObject()
     })
   } catch (error) {
     console.error('Update profile error:', error)

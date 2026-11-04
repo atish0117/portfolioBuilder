@@ -6,66 +6,92 @@ const API_BASE_URL =
 console.log(import.meta.env.VITE_BACKEND_API_URL)
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true 
+  withCredentials: true
 })
 
-// Add auth token to requests
-let isRefreshing = false
-let failedQueue = []
+
+// Single-flight refresh mechanism
+let isRefreshing = false;
+let failedQueue = [];
 
 const processQueue = (error = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
-      reject(error)
+      reject(error);
     } else {
-      resolve()
+      resolve();
     }
-  })
-  failedQueue = []
-}
+  });
+
+  failedQueue = [];
+};
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config
-    const status = error.response?.status
-    const url = originalRequest?.url || ''
 
-    // login/register/refresh par refresh logic mat chalao
-    if (
-      url.includes('/auth/login') ||
-      url.includes('/auth/register') ||
-      url.includes('/auth/refresh')
-    ) {
-      return Promise.reject(error)
+  async (error) => {
+    const originalRequest = error.config;
+    const status = error.response?.status;
+    const url = originalRequest?.url || "";
+
+    if (!originalRequest) {
+      return Promise.reject(error);
     }
 
-    if (status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
+    // Do not refresh for authentication endpoints
+    const excludedUrls = [
+      "/auth/login",
+      "/auth/register",
+      "/auth/refresh",
+      "/auth/logout",
+    ];
 
+    const isExcludedUrl = excludedUrls.some((path) =>
+      url.includes(path)
+    );
+
+    if (isExcludedUrl) {
+      return Promise.reject(error);
+    }
+
+    // Refresh only once for a failed request
+    if (status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      // Another request is already refreshing
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        }).then(() => api(originalRequest))
+          failedQueue.push({ resolve, reject });
+        }).then(() => {
+          return api(originalRequest);
+        });
       }
 
-      isRefreshing = true
+      isRefreshing = true;
 
       try {
-        await api.post('/auth/refresh')
-        processQueue()
-        return api(originalRequest)
+        // Refresh access and refresh cookies
+        await api.post("/auth/refresh");
+
+        // Release waiting requests
+        processQueue();
+
+        // Retry original request
+        return api(originalRequest);
+
       } catch (refreshError) {
-        processQueue(refreshError)
-        return Promise.reject(refreshError)
+        processQueue(refreshError);
+
+        return Promise.reject(refreshError);
+
       } finally {
-        isRefreshing = false
+        isRefreshing = false;
       }
     }
 
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
 
 
@@ -76,7 +102,7 @@ export const authAPI = {
 
   register: (userData) =>
     api.post('/auth/register', userData),
-  
+
   logout: () => api.post('/auth/logout'),
 
   getProfile: () => api.get('/auth/profile'),
@@ -86,13 +112,13 @@ export const authAPI = {
 
   updateSkills: (skills) =>
     api.put('/skills', skills),
-  
+
   forgotPassword: (email) =>
     api.post('/password/forgot-password', { email }),
-  
+
   resetPassword: (token, password, confirmPassword) =>
     api.post('/password/reset-password', { token, password, confirmPassword }),
-  
+
   verifyResetToken: (token) =>
     api.get(`/password/verify-reset-token/${token}`),
 
@@ -144,16 +170,16 @@ export const projectsAPI = {
 // SEO API
 export const seoAPI = {
   getSeoData: () => api.get('/seo/data'),
-  
+
   updateSeoData: (seoData) =>
     api.put('/seo/data', seoData),
-  
+
   generateSuggestions: () =>
     api.post('/seo/suggestions'),
-  
+
   getSeoAnalysis: () =>
     api.get('/seo/analysis'),
-  
+
   getSeoPreview: (username) =>
     api.get(`/seo/preview/${username}`),
 }
@@ -166,7 +192,7 @@ export const templateAPI = {
 // Admin API
 export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
-  
+
   getUsers: (params) => api.get('/admin/users', { params }),
 
   updateUserStatus: (userId, status, reason) =>
@@ -180,7 +206,7 @@ export const adminAPI = {
 
   bulkUserAction: (userIds, action, reason) =>
     api.post('/admin/users/bulk-action', { userIds, action, reason }),
-  
+
   getTemplates: () => api.get('/admin/templates'),
 
   createTemplate: (templateData) =>
@@ -194,7 +220,7 @@ export const adminAPI = {
 
   getAnalytics: (timeRange = '30d') =>
     api.get(`/admin/analytics?range=${timeRange}`),
-  
+
   getSystemSettings: () => api.get('/admin/settings'),
 
   updateSystemSetting: (settingKey, settingValue, description) =>
