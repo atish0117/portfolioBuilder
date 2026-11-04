@@ -1,24 +1,26 @@
 import mongoose from "mongoose";
-import { stringify } from "postcss";
 
 const userSchema = new mongoose.Schema(
   {
-    fullName: { type: String,},
+    fullName: { type: String, },
     username: { type: String, required: true, unique: true, trim: true, index: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String }, // make optional for OAuth
+    password: {
+      type: String,
+      select: false,
+    }, // make optional for OAuth
 
-      // store hash refresh token inside the database
+    // store hash refresh token inside the database
     refreshTokenHash: {
-  type: String,
-  default: null
-},
-  // Cloudinary public id 
-  profileImgPublicId: String,
-resumePublicId: String,
+      type: String,
+      default: null
+    },
+    // Cloudinary public id 
+    profileImgPublicId: String,
+    resumePublicId: String,
 
 
- // ----------------- Social Authentication -----------------
+    // ----------------- Social Authentication -----------------
     socialAuth: {
       github: {
         id: String,
@@ -49,29 +51,29 @@ resumePublicId: String,
     },
 
     // OAuth Connections 
-connections: {
-  github: {
-    connected: { type: Boolean, default: false },
-    connectedAt: { type: Date },
-    lastSyncedAt: { type: Date },
-    username: { type: String },
-    profileUrl: { type: String }
-  },
-  google: {
-    connected: { type: Boolean, default: false },
-    connectedAt: { type: Date },
-    lastSyncedAt: { type: Date },
-    email: { type: String },
-    profileUrl: { type: String }
-  },
-  linkedin: {
-    connected: { type: Boolean, default: false },
-    connectedAt: { type: Date },
-    lastSyncedAt: { type: Date },
-    username: { type: String },
-    profileUrl: { type: String }
-  }
-},
+    connections: {
+      github: {
+        connected: { type: Boolean, default: false },
+        connectedAt: { type: Date },
+        lastSyncedAt: { type: Date },
+        username: { type: String },
+        profileUrl: { type: String }
+      },
+      google: {
+        connected: { type: Boolean, default: false },
+        connectedAt: { type: Date },
+        lastSyncedAt: { type: Date },
+        email: { type: String },
+        profileUrl: { type: String }
+      },
+      linkedin: {
+        connected: { type: Boolean, default: false },
+        connectedAt: { type: Date },
+        lastSyncedAt: { type: Date },
+        username: { type: String },
+        profileUrl: { type: String }
+      }
+    },
 
 
     // Password Reset Fields
@@ -79,7 +81,7 @@ connections: {
     passwordResetExpires: Date,
     passwordChangedAt: Date,
 
-     // Admin Fields
+    // Admin Fields
     role: {
       type: String,
       enum: ["user", "admin", "moderator"],
@@ -110,54 +112,53 @@ connections: {
       dribbble: String,
       behance: String,
       website: String,
-      
+
     },
-    skills: [{ type: String }], // old skills schema 
 
     // new skills schema
-    skills:[
-    {
-      name:{
-        type:String,
-        required:true,
-        trim:true
-      },
-      icon:{
-        type:String,
-        default:""
-      },
-      category:{
-        type:String,
-        default:"Other"
-      },
+    skills: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true
+        },
+        icon: {
+          type: String,
+          default: ""
+        },
+        category: {
+          type: String,
+          default: "Other"
+        },
 
-      level:{
-        type:String,
-        enum:['beginner', 'intermediate','advanced','expert'],
-        default:'intermediate'
-      },
-      yearsOfExperience:{
-        type:Number,
-        default:0,
-        min:0,
-        max:50,
-        
-      },
-      isPrimary:{
-        type:Boolean,
-        default:false
+        level: {
+          type: String,
+          enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+          default: 'intermediate'
+        },
+        yearsOfExperience: {
+          type: Number,
+          default: 0,
+          min: 0,
+          max: 50,
+
+        },
+        isPrimary: {
+          type: Boolean,
+          default: false
+        }
       }
-    }
-  ],
+    ],
 
-      aboutSections: [{
+    aboutSections: [{
       id: String,
       title: String,
       description: String,
     }],
-      languages: [{ type: String }],
-      timezone: String,
-      hourlyRate: String,
+    languages: [{ type: String }],
+    timezone: String,
+    hourlyRate: String,
 
     preferredWorkType: {
       type: String,
@@ -166,7 +167,7 @@ connections: {
     },
     availability: {
       type: String,
-      enum: ["available", "busy", "not-available","currently-working",],
+      enum: ["available", "busy", "not-available", "currently-working",],
       default: "available"
     },
     workExperience: {
@@ -193,12 +194,12 @@ connections: {
     ],
     sectionOrder: {
       type: [String],
-      default: ["hero", "about","skills", "projects", "education", "experience", "certifications", "testimonials", "contact"]
+      default: ["hero", "about", "skills", "projects", "education", "experience", "certifications", "testimonials", "contact"]
     },
     visibleSections: {
       type: Map,
       of: Boolean,
-     default: function() {
+      default: function () {
         return new Map([
           ['hero', true],
           ['about', true],
@@ -230,7 +231,7 @@ connections: {
     selectedTemplate: { type: String, default: "minimal" },
 
 
-                      //  Integration Settings 
+    //  Integration Settings 
     integrationSettings: {
       github: {
         autoImportRepos: { type: Boolean, default: true },
@@ -249,7 +250,7 @@ connections: {
       }
     },
 
-     // SEO Fields
+    // SEO Fields
     seoData: {
       metaTitle: { type: String, maxlength: 60 },
       metaDescription: { type: String, maxlength: 160 },
@@ -257,21 +258,21 @@ connections: {
       ogTitle: { type: String, maxlength: 60 },
       ogDescription: { type: String, maxlength: 160 },
       ogImage: { type: String },
-      twitterCard: { 
-        type: String, 
+      twitterCard: {
+        type: String,
         enum: ['summary', 'summary_large_image', 'app', 'player'],
-        default: 'summary_large_image' 
+        default: 'summary_large_image'
       },
       twitterTitle: { type: String, maxlength: 70 },
       twitterDescription: { type: String, maxlength: 200 },
       twitterImage: { type: String },
       canonicalUrl: { type: String },
-      robotsDirective: { 
-        type: String, 
+      robotsDirective: {
+        type: String,
         enum: ['index,follow', 'noindex,follow', 'index,nofollow', 'noindex,nofollow'],
-        default: 'index,follow' 
+        default: 'index,follow'
       },
-        structuredData: {
+      structuredData: {
         type: { type: String, default: 'Person' },
         jobTitle: String,
         worksFor: String,
@@ -286,12 +287,12 @@ connections: {
         content: String,
         property: String // For og: properties
       }],
-        seoScore: { type: Number, default: 0, min: 0, max: 100 },
+      seoScore: { type: Number, default: 0, min: 0, max: 100 },
       lastSeoUpdate: { type: Date, default: Date.now }
 
+    },
   },
-  },
-  
+
   { timestamps: true }
 );
 
@@ -314,20 +315,20 @@ userSchema.pre("validate", async function (next) {
 });
 
 //virtual skills percentage calculate
-const levelWeight={
-  beginner:25,
-  intermediate:50,
-  advanced:75,
-  expert:95
+const levelWeight = {
+  beginner: 25,
+  intermediate: 50,
+  advanced: 75,
+  expert: 95
 }
-userSchema.virtual('skillsWithPercentage').get(function(){
-  if(!this.skills) return []
+userSchema.virtual('skillsWithPercentage').get(function () {
+  if (!this.skills) return []
 
-  return this.skills.map(skill=>{
-    const base=levelWeight[skill.level] || 0
-    const bonus= (skill.yearsOfExperience || 0)*2
-    const percentage=Math.min(base+bonus,100)
-    return{
+  return this.skills.map(skill => {
+    const base = levelWeight[skill.level] || 0
+    const bonus = (skill.yearsOfExperience || 0) * 2
+    const percentage = Math.min(base + bonus, 100)
+    return {
       ...skill.toObject(),
       percentage
     }
@@ -349,13 +350,13 @@ const sanitize = (_, ret) => {
   return ret
 }
 
-userSchema.set('toJSON', { 
-  virtuals:true,
+userSchema.set('toJSON', {
+  virtuals: true,
   transform: sanitize
 })
 userSchema.set('toObject', {
-virtuals:true,
-transform: sanitize 
+  virtuals: true,
+  transform: sanitize
 })
 
 
