@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema(
   type: String,
   default: null
 },
+  // Cloudinary public id 
+  profileImgPublicId: String,
+resumePublicId: String,
+
+
  // ----------------- Social Authentication -----------------
     socialAuth: {
       github: {
