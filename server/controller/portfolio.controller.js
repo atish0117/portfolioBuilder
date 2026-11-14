@@ -60,7 +60,6 @@ export const getPublicPortfolio = async (req, res) => {
     }
 
     // 2. Fetch only public projects
-    // Fetch only public projects
     const projects = await Project.find({
       userId: user._id,
       status: { $in: ["published", "featured"] },
