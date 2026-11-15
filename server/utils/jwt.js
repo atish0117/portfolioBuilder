@@ -49,7 +49,6 @@ export const generateTokens = (user) => {
     {
       userId: user._id.toString(),
       tokenType: 'refresh',
-      iat: Math.floor(Date.now() / 1000)
     },
     JWT_REFRESH_SECRET,
     {
@@ -130,29 +129,3 @@ export const verifyRefreshToken = (token) => {
     throw new Error("REFRESH_TOKEN_VERIFICATION_FAILED");
   }
 }
-
-// currently this function not in working because direct use this function on another page 
-// Refresh access token
-export const refreshAccessToken = async (refreshToken) => {
-  try {
-    const decoded = verifyRefreshToken(refreshToken);
-
-    const User = (await import("../models/User.js")).default;
-
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
-      throw new Error("USER_NOT_FOUND");
-    }
-
-    if (user.status !== "active") {
-      throw new Error("ACCOUNT_NOT_ACTIVE");
-    }
-
-    const tokens = generateTokens(user);
-
-    return tokens;
-  } catch (error) {
-    throw error;
-  }
-};
